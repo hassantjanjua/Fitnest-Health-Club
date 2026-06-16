@@ -1,14 +1,11 @@
+'use client'
 import { useEffect, useState } from 'react'
 import { Menu, X, ArrowRight } from 'lucide-react'
 
 const navLinks = [
   { label: 'Home', href: '#home' },
   { label: 'Services', href: '#services' },
-  { label: 'About', href: '#about' },
-  { label: 'Trainers', href: '#trainers' },
   { label: 'Gallery', href: '#gallery' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Contact', href: '#contact' },
 ]
 
 export default function Navbar() {
@@ -88,7 +85,7 @@ export default function Navbar() {
           <div className="nav-links" style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 28,
+            gap: 40,
           }}>
             {navLinks.map(link => {
               const isActive = activeLink === link.href
