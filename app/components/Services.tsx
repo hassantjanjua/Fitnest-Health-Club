@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { Dumbbell, Heart, Zap, Users, Apple, Flame, ChevronRight } from 'lucide-react'
 

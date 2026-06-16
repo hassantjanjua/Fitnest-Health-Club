@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { MapPin, Phone, Mail, Clock, Send, ArrowRight } from 'lucide-react'
 

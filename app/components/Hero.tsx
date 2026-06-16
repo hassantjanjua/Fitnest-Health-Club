@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Play, ChevronDown, Flame, Users, Trophy, Dumbbell } from 'lucide-react'
 
