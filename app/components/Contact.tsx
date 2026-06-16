@@ -1,56 +1,11 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
-
-function MapPinIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  )
-}
-
-function PhoneIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.79a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  )
-}
-
-function MailIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-      <polyline points="22,6 12,13 2,6" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
-}
-
-function SendIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13" />
-      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  )
-}
+import { MapPin, Phone, Mail, Clock, Send, ArrowRight } from 'lucide-react'
 
 const contactItems = [
-  { Icon: MapPinIcon, label: 'Location', value: 'Model Town, Lahore, Punjab, Pakistan' },
-  { Icon: PhoneIcon, label: 'Phone', value: '+92 300 1234567' },
-  { Icon: MailIcon, label: 'Email', value: 'info@fitnestlahore.com' },
-  { Icon: ClockIcon, label: 'Hours', value: 'Mon–Sun: 6:00 AM – 11:00 PM' },
+  { Icon: MapPin, label: 'Location', value: 'Model Town, Lahore, Punjab, Pakistan' },
+  { Icon: Phone, label: 'Phone', value: '+92 300 1234567' },
+  { Icon: Mail, label: 'Email', value: 'info@fitnestlahore.com' },
+  { Icon: Clock, label: 'Hours', value: 'Mon–Sun: 6:00 AM – 11:00 PM' },
 ]
 
 export default function Contact() {
@@ -72,15 +27,14 @@ export default function Contact() {
     return () => observer.disconnect()
   }, [])
 
-  function fade(delay: number): React.CSSProperties {
-    return {
-      opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(40px)',
-      transition: `opacity 0.9s ease ${delay}s, transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
-    }
-  }
+  const fade = (delay: number): React.CSSProperties => ({
+    opacity: visible ? 1 : 0,
+    transform: visible ? 'translateY(0)' : 'translateY(40px)',
+    transition: `opacity 0.9s ease ${delay}s, transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+  })
 
-  async function handleSubmit() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
     if (!name || !email) return
     setSending(true)
 
@@ -97,127 +51,265 @@ export default function Contact() {
     setTimeout(() => setSent(false), 4000)
   }
 
-  const base: React.CSSProperties = {
-    width: '100%',
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    color: '#fff',
-    padding: '14px 18px',
-    fontSize: 14,
-    borderRadius: 2,
-    outline: 'none',
-  }
-
   return (
-    <section id="contact" ref={ref} style={{ padding: '120px 0', background: '#050505' }}>
+    <section id="contact" ref={ref} style={{
+      padding: 'clamp(60px, 10vw, 120px) 0',
+      background: 'linear-gradient(180deg, #080808 0%, #050505 100%)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Background accent */}
+      <div style={{
+        position: 'absolute', bottom: '-20%', right: '-10%',
+        width: 700, height: 700, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255,107,0,0.05) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="cnt-wrap">
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="contact-container">
 
-        {/* LEFT SIDE */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 80 }} className="cnt-grid">
+        {/* Header */}
+        <div style={{ marginBottom: 'clamp(40px, 5vw, 64px)' }}>
+          <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 40, height: 2, background: 'var(--accent-orange)' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--accent-orange)' }}>
+              Get In Touch
+            </span>
+          </div>
+          <h2 style={{
+            ...fade(0.18),
+            fontFamily: 'Bebas Neue', fontSize: 'clamp(48px, 7vw, 100px)',
+            lineHeight: 0.9, color: '#fff', margin: 0,
+          }}>
+            START YOUR<br />
+            <span style={{ color: 'transparent', WebkitTextStroke: '2px rgba(255,255,255,0.15)' }}>FITNESS</span>{' '}
+            <span style={{ color: 'var(--accent-orange)' }}>JOURNEY.</span>
+          </h2>
+        </div>
 
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 80 }} className="contact-grid">
+
+          {/* Left: Contact Info */}
           <div>
+            <p style={{ ...fade(0.22), fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, marginBottom: 40 }}>
+              Ready to transform? Visit us, call us, or drop a message. Our team typically responds within 2 hours during operating hours.
+            </p>
 
             {contactItems.map((item, i) => (
-              <div key={item.label} style={{ ...fade(0.2 + i * 0.07), display: 'flex', gap: 18, marginBottom: 16 }}>
-                <div style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <item.Icon />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,107,0,0.7)' }}>{item.label}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</div>
-                </div>
-              </div>
+              <ContactItem key={item.label} item={item} fadeStyle={fade(0.25 + i * 0.07)} />
             ))}
 
-            {/* FIXED MAP LINK BLOCK */}
-            <div style={{ marginTop: 30, textAlign: 'center' }}>
-              <MapPinIcon />
-              <div style={{ fontSize: 12, marginTop: 8, color: 'rgba(255,255,255,0.3)' }}>
-                MODEL TOWN, LAHORE
+            {/* Map Link */}
+            <div style={{ ...fade(0.5), marginTop: 40, textAlign: 'center' }}>
+              <div style={{
+                width: 56, height: 56, margin: '0 auto 16px',
+                background: 'rgba(255,107,0,0.1)',
+                border: '1px solid rgba(255,107,0,0.2)',
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <MapPin size={24} color="var(--accent-orange)" />
               </div>
-
+              <div style={{ fontSize: 12, marginBottom: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                Model Town, Lahore
+              </div>
               <a
-                href="https://maps.google.com"
+                href="https://maps.google.com/?q=Model+Town+Lahore"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  display: 'inline-block',
-                  marginTop: 10,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
                   fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
                   color: 'var(--accent-orange)',
                   textDecoration: 'none',
                   borderBottom: '1px solid rgba(255,107,0,0.3)',
                   paddingBottom: 2,
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'var(--accent-orange)'
+                  e.currentTarget.style.gap = '10px'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
+                  e.currentTarget.style.gap = '6px'
                 }}
               >
-                Open in Google Maps
+                Open in Google Maps <ArrowRight size={12} />
               </a>
             </div>
-
           </div>
 
-          {/* FORM */}
-          <div style={fade(0.25)}>
+          {/* Right: Form */}
+          <div style={fade(0.3)}>
+            <form onSubmit={handleSubmit} style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              padding: 'clamp(24px, 3vw, 40px)',
+              clipPath: 'polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,20px 100%,0 calc(100% - 20px))',
+            }}>
+              <div style={{ fontFamily: 'Bebas Neue', fontSize: 11, letterSpacing: '0.28em', color: 'var(--accent-orange)', marginBottom: 24, textTransform: 'uppercase' }}>
+                Send Us a Message
+              </div>
 
-            <div>
-
-              <input
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={base}
-              />
-
-              <input
-                placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{ ...base, marginTop: 12 }}
-              />
-
-              <input
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ ...base, marginTop: 12 }}
-              />
-
-              <textarea
-                placeholder="Message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={4}
-                style={{ ...base, marginTop: 12, resize: 'none' }}
-              />
+              <FormInput placeholder="Full Name *" value={name} onChange={setName} />
+              <FormInput placeholder="Phone Number" value={phone} onChange={setPhone} style={{ marginTop: 12 }} />
+              <FormInput placeholder="Email Address *" value={email} onChange={setEmail} type="email" style={{ marginTop: 12 }} />
+              <FormTextarea placeholder="Your Message" value={message} onChange={setMessage} style={{ marginTop: 12 }} />
 
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={sending || sent}
+                className="btn-primary"
                 style={{
                   width: '100%',
-                  marginTop: 16,
-                  padding: 14,
-                  background: sent ? '#22c55e' : 'var(--accent-orange)',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
+                  marginTop: 20,
+                  padding: '16px',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  background: sent ? '#22c55e' : undefined,
+                  opacity: sending ? 0.7 : 1,
                 }}
               >
-                {sent ? 'Message Sent' : sending ? 'Sending...' : (
-                  <span style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                    <SendIcon /> Send Message
-                  </span>
+                {sent ? (
+                  <>✓ Message Sent!</>
+                ) : sending ? (
+                  <>Sending...</>
+                ) : (
+                  <><Send size={14} /> Send Message</>
                 )}
               </button>
 
-            </div>
-
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 16, textAlign: 'center' }}>
+                We&apos;ll get back to you within 2 hours during operating hours
+              </p>
+            </form>
           </div>
-
         </div>
-
       </div>
     </section>
+  )
+}
+
+function ContactItem({ item, fadeStyle }: {
+  item: typeof contactItems[0]
+  fadeStyle: React.CSSProperties
+}) {
+  const [hovered, setHovered] = useState(false)
+  const Icon = item.Icon
+
+  return (
+    <div
+      style={{
+        ...fadeStyle,
+        display: 'flex',
+        gap: 18,
+        marginBottom: 20,
+        padding: '16px',
+        background: hovered ? 'rgba(255,107,0,0.04)' : 'transparent',
+        border: `1px solid ${hovered ? 'rgba(255,107,0,0.15)' : 'transparent'}`,
+        borderRadius: 4,
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        cursor: 'default',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        width: 44, height: 44,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(255,107,0,0.1)',
+        border: '1px solid rgba(255,107,0,0.2)',
+        clipPath: 'polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))',
+        transition: 'all 0.35s ease',
+        transform: hovered ? 'scale(1.1)' : 'scale(1)',
+      }}>
+        <Icon size={18} color="var(--accent-orange)" />
+      </div>
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,107,0,0.7)', marginBottom: 4 }}>
+          {item.label}
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15 }}>
+          {item.value}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FormInput({ placeholder, value, onChange, type = 'text', style = {} }: {
+  placeholder: string
+  value: string
+  onChange: (val: string) => void
+  type?: string
+  style?: React.CSSProperties
+}) {
+  const [focused, setFocused] = useState(false)
+
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+        color: '#fff',
+        padding: '14px 18px',
+        fontSize: 14,
+        borderRadius: 2,
+        outline: 'none',
+        transition: 'all 0.3s ease',
+        ...style,
+      }}
+    />
+  )
+}
+
+function FormTextarea({ placeholder, value, onChange, style = {} }: {
+  placeholder: string
+  value: string
+  onChange: (val: string) => void
+  style?: React.CSSProperties
+}) {
+  const [focused, setFocused] = useState(false)
+
+  return (
+    <textarea
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      rows={4}
+      style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+        color: '#fff',
+        padding: '14px 18px',
+        fontSize: 14,
+        borderRadius: 2,
+        outline: 'none',
+        resize: 'none',
+        transition: 'all 0.3s ease',
+        fontFamily: 'inherit',
+        ...style,
+      }}
+    />
   )
 }

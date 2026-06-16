@@ -1,274 +1,223 @@
-'use client'
-
-import { useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
-import { Menu, X, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Menu, X, ArrowRight } from 'lucide-react'
 
 const navLinks = [
-  { label: 'About', href: '#about' },
+  { label: 'Home', href: '#home' },
   { label: 'Services', href: '#services' },
-  { label: 'Plans', href: '#plans' },
-  { label: 'Trainers', href: '#trainers' },
   { label: 'Gallery', href: '#gallery' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Contact', href: '#contact' },
 ]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('home')
-  const [hovered, setHovered] = useState<string | null>(null)
-
-  const menuRef = useRef<HTMLDivElement>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeLink, setActiveLink] = useState('#home')
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 60)
+      setScrolled(window.scrollY > 40)
 
-      const sections = ['home', 'about', 'services', 'plans', 'trainers', 'gallery', 'faq', 'contact']
-
-      for (const id of [...sections].reverse()) {
-        const el = document.getElementById(id)
-        if (el && window.scrollY >= el.offsetTop - 120) {
-          setActiveSection(id)
-          break
+      // Detect active section
+      const sections = navLinks.map(l => l.href.replace('#', ''))
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sections[i])
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          if (rect.top <= 150) {
+            setActiveLink(`#${sections[i]}`)
+            break
+          }
         }
       }
     }
-
     window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Lock body when mobile menu is open
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const scrollTo = (href: string) => {
-    const id = href.replace('#', '')
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-    setMenuOpen(false)
-  }
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
 
   return (
     <>
-      <nav
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-          padding: scrolled ? '14px 0' : '22px 0',
-          background: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(24px) saturate(180%)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(255,107,0,0.12)' : 'none',
-          transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '0 32px',
+      <nav style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        padding: scrolled ? '12px 0' : '20px 0',
+        background: scrolled ? 'rgba(8,8,8,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
+        transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+      }}>
+        <div style={{
+          maxWidth: 1400,
+          margin: '0 auto',
+          padding: '0 48px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }} className="hero-container">
+
+          {/* Logo */}
+          <a href="#home" style={{
+            fontFamily: 'Bebas Neue, sans-serif',
+            fontSize: 28,
+            color: '#fff',
+            textDecoration: 'none',
+            letterSpacing: '0.08em',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 3,
+            transition: 'transform 0.3s ease',
           }}
-        >
-          {/* LOGO */}
-          <Link
-            href="/"
-            onClick={() => scrollTo('#home')}
-            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                background: 'var(--accent-orange)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Zap size={20} color="#fff" />
-            </div>
+            FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
+          </a>
 
-            <div>
-              <div
-                style={{
-                  fontFamily: 'Bebas Neue, sans-serif',
-                  fontSize: 26,
-                  color: '#fff',
-                }}
-              >
-                FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
-              </div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>
-                Health Club
-              </div>
-            </div>
-          </Link>
-
-          {/* DESKTOP NAV */}
-          <div className="nav-desktop" style={{ display: 'flex', gap: 8 }}>
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.href.replace('#', '')
-              const isHovered = hovered === link.label
-
+          {/* Desktop Links */}
+          <div className="nav-links" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 40,
+          }}>
+            {navLinks.map(link => {
+              const isActive = activeLink === link.href
               return (
-                <button
-                  key={link.label}
-                  onClick={() => scrollTo(link.href)}
-                  onMouseEnter={() => setHovered(link.label)}
-                  onMouseLeave={() => setHovered(null)}
+                <a
+                  key={link.href}
+                  href={link.href}
                   style={{
-                    background: isActive
-                      ? 'rgba(255,107,0,0.1)'
-                      : isHovered
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'transparent',
-                    border: isActive
-                      ? '1px solid rgba(255,107,0,0.3)'
-                      : '1px solid transparent',
-                    color: isActive ? 'var(--accent-orange)' : 'rgba(255,255,255,0.65)',
-                    padding: '8px 14px',
                     fontSize: 11,
                     fontWeight: 700,
-                    cursor: 'pointer',
-                    letterSpacing: '0.14em',
+                    letterSpacing: '0.18em',
                     textTransform: 'uppercase',
+                    textDecoration: 'none',
+                    color: isActive ? 'var(--accent-orange)' : 'rgba(255,255,255,0.55)',
+                    position: 'relative',
+                    padding: '8px 0',
+                    transition: 'color 0.3s ease',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) e.currentTarget.style.color = '#fff'
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
                   }}
                 >
                   {link.label}
-                </button>
+                  <span style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: isActive ? '100%' : '0%',
+                    height: 2,
+                    background: 'var(--accent-orange)',
+                    transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
+                  }} />
+                </a>
               )
             })}
           </div>
 
-          {/* CTA */}
-          <div className="nav-desktop" style={{ display: 'flex', gap: 10 }}>
+          {/* Desktop CTA */}
+          <div className="nav-cta-desktop" style={{ display: 'flex' }}>
             <button
-              onClick={() => scrollTo('#contact')}
+              className="btn-primary"
               style={{
-                border: '1px solid rgba(255,255,255,0.2)',
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.7)',
-                padding: '10px 18px',
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: 'pointer',
+                padding: '12px 28px',
+                fontSize: 10,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
               }}
             >
-              Login
-            </button>
-
-            <button
-              onClick={() => scrollTo('#plans')}
-              style={{
-                background: 'var(--accent-orange)',
-                border: 'none',
-                color: '#fff',
-                padding: '11px 20px',
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Join Now
+              Join Now <ArrowRight size={13} />
             </button>
           </div>
 
-          {/* MOBILE BUTTON */}
+          {/* Mobile hamburger */}
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="nav-mobile-btn"
+            className="mobile-menu-btn"
+            onClick={() => setMobileOpen(!mobileOpen)}
             style={{
               display: 'none',
-              background: 'rgba(255,107,0,0.1)',
-              border: '1px solid rgba(255,107,0,0.3)',
-              width: 42,
-              height: 42,
               alignItems: 'center',
               justifyContent: 'center',
+              width: 44,
+              height: 44,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fff',
               cursor: 'pointer',
+              clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+              transition: 'all 0.3s ease',
             }}
           >
-            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </nav>
 
-      {/* MOBILE MENU */}
-      <div
-        ref={menuRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 300,
-          background: 'rgba(8,8,8,0.98)',
-          zIndex: 999,
-          padding: '100px 32px',
-          transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: '0.4s ease',
-        }}
-      >
+      {/* Mobile Menu Overlay */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 999,
+        background: 'rgba(8,8,8,0.98)',
+        backdropFilter: 'blur(20px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 32,
+        opacity: mobileOpen ? 1 : 0,
+        pointerEvents: mobileOpen ? 'auto' : 'none',
+        transition: 'opacity 0.4s ease',
+      }}>
         {navLinks.map((link, i) => (
-          <button
-            key={link.label}
-            onClick={() => scrollTo(link.href)}
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={() => setMobileOpen(false)}
             style={{
-              display: 'block',
-              width: '100%',
-              padding: '16px 0',
-              border: 'none',
-              background: 'transparent',
-              color: 'rgba(255,255,255,0.7)',
-              textAlign: 'left',
-              cursor: 'pointer',
+              fontFamily: 'Bebas Neue, sans-serif',
+              fontSize: 48,
+              color: activeLink === link.href ? 'var(--accent-orange)' : '#fff',
+              textDecoration: 'none',
+              letterSpacing: '0.1em',
+              transform: mobileOpen ? 'translateY(0)' : 'translateY(30px)',
+              opacity: mobileOpen ? 1 : 0,
+              transition: `all 0.5s cubic-bezier(0.16,1,0.3,1) ${0.1 + i * 0.08}s`,
             }}
           >
             {link.label}
-          </button>
+          </a>
         ))}
-      </div>
 
-      {/* OVERLAY */}
-      {menuOpen && (
-        <div
-          onClick={() => setMenuOpen(false)}
+        <button
+          className="btn-primary"
+          onClick={() => setMobileOpen(false)}
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            zIndex: 998,
+            padding: '16px 40px',
+            fontSize: 12,
+            marginTop: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            opacity: mobileOpen ? 1 : 0,
+            transform: mobileOpen ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1) 0.4s',
           }}
-        />
-      )}
-
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .nav-desktop {
-            display: none !important;
-          }
-          .nav-mobile-btn {
-            display: flex !important;
-          }
-        }
-      `}</style>
+        >
+          Join Now <ArrowRight size={15} />
+        </button>
+      </div>
     </>
   )
 }

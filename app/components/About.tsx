@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import { Shield, Zap, Heart, Award, ChevronRight } from 'lucide-react'
 
@@ -38,8 +36,10 @@ export default function About() {
 
   return (
     <section id="about" ref={ref} style={{
-      padding: '120px 0', background: '#080808',
-      position: 'relative', overflow: 'hidden',
+      padding: 'clamp(60px, 10vw, 120px) 0',
+      background: '#080808',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
       {/* Background accent */}
       <div style={{
@@ -52,7 +52,7 @@ export default function About() {
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="about-container">
 
         {/* Top: label + heading + intro */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'end', marginBottom: 80 }} className="about-top">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'end', marginBottom: 'clamp(48px, 6vw, 80px)' }} className="about-top">
           <div>
             <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 40, height: 2, background: 'var(--accent-orange)' }} />
@@ -62,7 +62,7 @@ export default function About() {
             </div>
             <h2 style={{
               ...fade(0.18),
-              fontFamily: 'Bebas Neue', fontSize: 'clamp(52px, 7vw, 100px)',
+              fontFamily: 'Bebas Neue', fontSize: 'clamp(48px, 7vw, 100px)',
               lineHeight: 0.9, color: '#fff', margin: 0,
             }}>
               MORE THAN<br />
@@ -73,67 +73,31 @@ export default function About() {
 
           <div style={fade(0.26)}>
             <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', lineHeight: 1.85, marginBottom: 24 }}>
-              Fitnest Health Club was born from a simple belief — everyone deserves access to world-class fitness. 
-              Since 2017, we ve been Lahore s most trusted transformation hub, combining elite coaching with 
+              Fitnest Health Club was born from a simple belief — everyone deserves access to world-class fitness.
+              Since 2017, we&apos;ve been Lahore&apos;s most trusted transformation hub, combining elite coaching with
               a community that genuinely cares about your progress.
             </p>
             <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', lineHeight: 1.85, marginBottom: 32 }}>
-              Located in the heart of Model Town, our 10,000 sq ft facility is packed with the latest 
+              Located in the heart of Model Town, our 10,000 sq ft facility is packed with the latest
               equipment, expert trainers, and programs built for every fitness level.
             </p>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'transparent', border: 'none',
-              color: 'var(--accent-orange)', fontSize: 12, fontWeight: 700,
-              letterSpacing: '0.16em', textTransform: 'uppercase', cursor: 'none',
-              padding: 0, transition: 'gap 0.3s ease',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.gap = '14px')}
-              onMouseLeave={e => (e.currentTarget.style.gap = '8px')}
-            >
-              Our Full Story <ChevronRight size={16} />
-            </button>
+            <StoryButton />
           </div>
         </div>
 
         {/* Values grid */}
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 1, marginBottom: 80,
+          gap: 1, marginBottom: 'clamp(48px, 6vw, 80px)',
           background: 'rgba(255,107,0,0.08)',
           border: '1px solid rgba(255,107,0,0.1)',
         }} className="values-grid">
-          {values.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title} style={{
-              ...fade(0.1 + i * 0.08),
-              padding: '40px 32px',
-              background: '#080808',
-              borderRight: i < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              transition: 'background 0.3s ease',
-              cursor: 'default',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,0,0.05)')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#080808')}
-            >
-              <div style={{
-                width: 52, height: 52, marginBottom: 20,
-                background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.2)',
-                clipPath: 'polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Icon size={22} color="var(--accent-orange)" />
-              </div>
-              <h3 style={{ fontFamily: 'Bebas Neue', fontSize: 24, color: '#fff', letterSpacing: '0.05em', marginBottom: 12 }}>
-                {title}
-              </h3>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, margin: 0 }}>
-                {desc}
-              </p>
-            </div>
+          {values.map((value, i) => (
+            <ValueCard key={value.title} value={value} index={i} fadeStyle={fade(0.1 + i * 0.08)} />
           ))}
         </div>
 
-        {/* Timeline + image split */}
+        {/* Timeline + stats split */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }} className="about-bottom">
           {/* Timeline */}
           <div style={fade(0.2)}>
@@ -145,91 +109,242 @@ export default function About() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {milestones.map((m, i) => (
-                <div key={m.year} style={{
-                  display: 'flex', gap: 24, alignItems: 'flex-start',
-                  paddingBottom: i < milestones.length - 1 ? 32 : 0,
-                  position: 'relative',
-                }}>
-                  {/* Line */}
-                  {i < milestones.length - 1 && (
-                    <div style={{
-                      position: 'absolute', left: 19, top: 40,
-                      width: 2, height: 'calc(100% - 8px)',
-                      background: 'rgba(255,107,0,0.15)',
-                    }} />
-                  )}
-                  {/* Dot */}
-                  <div style={{
-                    width: 40, height: 40, flexShrink: 0,
-                    border: '2px solid var(--accent-orange)',
-                    borderRadius: '50%',
-                    background: 'rgba(255,107,0,0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    position: 'relative', zIndex: 1,
-                  }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-orange)' }} />
-                  </div>
-                  <div style={{ paddingTop: 8 }}>
-                    <div style={{ fontFamily: 'Bebas Neue', fontSize: 28, color: 'var(--accent-orange)', lineHeight: 1, marginBottom: 6 }}>
-                      {m.year}
-                    </div>
-                    <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                      {m.event}
-                    </div>
-                  </div>
-                </div>
+                <MilestoneItem key={m.year} milestone={m} isLast={i === milestones.length - 1} />
               ))}
             </div>
           </div>
 
           {/* Stats visual */}
           <div style={{ ...fade(0.3), position: 'relative' }}>
-            <div style={{
-              background: 'rgba(255,107,0,0.04)',
-              border: '1px solid rgba(255,107,0,0.15)',
-              padding: '48px 40px',
-              clipPath: 'polygon(0 0,calc(100% - 24px) 0,100% 24px,100% 100%,24px 100%,0 calc(100% - 24px))',
-            }}>
-              <div style={{ fontFamily: 'Bebas Neue', fontSize: 11, letterSpacing: '0.28em', color: 'var(--accent-orange)', marginBottom: 32, textTransform: 'uppercase' }}>
-                Why Members Choose Us
-              </div>
-              {[
-                { label: 'Member Retention Rate', value: 94 },
-                { label: 'Goal Achievement Rate', value: 87 },
-                { label: 'Trainer Satisfaction', value: 98 },
-                { label: 'Facility Cleanliness', value: 99 },
-              ].map((item, i) => (
-                <div key={item.label} style={{ marginBottom: i < 3 ? 28 : 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{item.label}</span>
-                    <span style={{ fontSize: 13, color: 'var(--accent-orange)', fontWeight: 700 }}>{item.value}%</span>
-                  </div>
-                  <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: 2,
-                      background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)',
-                      width: visible ? `${item.value}%` : '0%',
-                      transition: `width 1.2s cubic-bezier(0.16,1,0.3,1) ${0.3 + i * 0.1}s`,
-                    }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <StatsCard visible={visible} />
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .about-top { grid-template-columns: 1fr !important; gap: 40px !important; }
-          .about-bottom { grid-template-columns: 1fr !important; gap: 48px !important; }
-          .values-grid { grid-template-columns: 1fr 1fr !important; }
-          .about-container { padding: 0 20px !important; }
-        }
-        @media (max-width: 600px) {
-          .values-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </section>
+  )
+}
+
+function StoryButton() {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', alignItems: 'center',
+        gap: hovered ? 14 : 8,
+        background: 'transparent', border: 'none',
+        color: 'var(--accent-orange)', fontSize: 12, fontWeight: 700,
+        letterSpacing: '0.16em', textTransform: 'uppercase', cursor: 'pointer',
+        padding: 0, transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+      }}
+    >
+      Our Full Story
+      <ChevronRight
+        size={16}
+        style={{
+          transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
+          transform: hovered ? 'translateX(4px)' : 'translateX(0)',
+        }}
+      />
+    </button>
+  )
+}
+
+function ValueCard({ value, index, fadeStyle }: {
+  value: typeof values[0]
+  index: number
+  fadeStyle: React.CSSProperties
+}) {
+  const [hovered, setHovered] = useState(false)
+  const Icon = value.icon
+
+  return (
+    <div
+      style={{
+        ...fadeStyle,
+        padding: 'clamp(24px, 3vw, 40px) clamp(20px, 2vw, 32px)',
+        background: hovered ? 'rgba(255,107,0,0.05)' : '#080808',
+        borderRight: index < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        cursor: 'default',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        width: 52, height: 52, marginBottom: 20,
+        background: hovered ? 'rgba(255,107,0,0.15)' : 'rgba(255,107,0,0.1)',
+        border: `1px solid ${hovered ? 'rgba(255,107,0,0.4)' : 'rgba(255,107,0,0.2)'}`,
+        clipPath: 'polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'scale(1.1) rotate(-3deg)' : 'scale(1) rotate(0deg)',
+      }}>
+        <Icon size={22} color="var(--accent-orange)" />
+      </div>
+      <h3 style={{
+        fontFamily: 'Bebas Neue',
+        fontSize: 'clamp(20px, 2vw, 24px)',
+        color: '#fff',
+        letterSpacing: '0.05em',
+        marginBottom: 12,
+      }}>
+        {value.title}
+      </h3>
+      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, margin: 0 }}>
+        {value.desc}
+      </p>
+    </div>
+  )
+}
+
+function MilestoneItem({ milestone, isLast }: {
+  milestone: typeof milestones[0]
+  isLast: boolean
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div
+      style={{
+        display: 'flex', gap: 24, alignItems: 'flex-start',
+        paddingBottom: isLast ? 0 : 32,
+        position: 'relative',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Line */}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', left: 19, top: 40,
+          width: 2, height: 'calc(100% - 8px)',
+          background: 'rgba(255,107,0,0.15)',
+        }} />
+      )}
+      {/* Dot */}
+      <div style={{
+        width: 40, height: 40, flexShrink: 0,
+        border: '2px solid var(--accent-orange)',
+        borderRadius: '50%',
+        background: hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,107,0,0.1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', zIndex: 1,
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'scale(1.15)' : 'scale(1)',
+      }}>
+        <div style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: 'var(--accent-orange)',
+          transition: 'transform 0.3s ease',
+          transform: hovered ? 'scale(1.3)' : 'scale(1)',
+        }} />
+      </div>
+      <div style={{
+        paddingTop: 8,
+        transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'translateX(6px)' : 'translateX(0)',
+      }}>
+        <div style={{
+          fontFamily: 'Bebas Neue',
+          fontSize: 28,
+          color: 'var(--accent-orange)',
+          lineHeight: 1,
+          marginBottom: 6,
+        }}>
+          {milestone.year}
+        </div>
+        <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+          {milestone.event}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatsCard({ visible }: { visible: boolean }) {
+  const stats = [
+    { label: 'Member Retention Rate', value: 94 },
+    { label: 'Goal Achievement Rate', value: 87 },
+    { label: 'Trainer Satisfaction', value: 98 },
+    { label: 'Facility Cleanliness', value: 99 },
+  ]
+
+  return (
+    <div style={{
+      background: 'rgba(255,107,0,0.04)',
+      border: '1px solid rgba(255,107,0,0.15)',
+      padding: 'clamp(32px, 4vw, 48px) clamp(28px, 3vw, 40px)',
+      clipPath: 'polygon(0 0,calc(100% - 24px) 0,100% 24px,100% 100%,24px 100%,0 calc(100% - 24px))',
+    }}>
+      <div style={{
+        fontFamily: 'Bebas Neue',
+        fontSize: 11,
+        letterSpacing: '0.28em',
+        color: 'var(--accent-orange)',
+        marginBottom: 32,
+        textTransform: 'uppercase',
+      }}>
+        Why Members Choose Us
+      </div>
+      {stats.map((item, i) => (
+        <StatBar key={item.label} item={item} index={i} isLast={i === stats.length - 1} visible={visible} />
+      ))}
+    </div>
+  )
+}
+
+function StatBar({ item, index, isLast, visible }: {
+  item: { label: string; value: number }
+  index: number
+  isLast: boolean
+  visible: boolean
+}) {
+  const animDelay = 0.3 + index * 0.1
+  
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div
+      style={{ marginBottom: isLast ? 0 : 28 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{
+          fontSize: 13,
+          color: hovered ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.6)',
+          fontWeight: 500,
+          transition: 'color 0.3s ease',
+        }}>
+          {item.label}
+        </span>
+        <span style={{
+          fontSize: 13,
+          color: 'var(--accent-orange)',
+          fontWeight: 700,
+          transition: 'transform 0.3s ease',
+          transform: hovered ? 'scale(1.1)' : 'scale(1)',
+        }}>
+          {item.value}%
+        </span>
+      </div>
+      <div style={{
+        height: 4,
+        background: 'rgba(255,255,255,0.06)',
+        borderRadius: 2,
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          borderRadius: 2,
+          background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)',
+          width: visible ? `${item.value}%` : '0%',
+          transition: `width 1.2s cubic-bezier(0.16,1,0.3,1) ${animDelay}s`,
+          boxShadow: hovered ? '0 0 12px rgba(255,107,0,0.5)' : 'none',
+        }} />
+      </div>
+    </div>
   )
 }

@@ -1,21 +1,21 @@
-'use client'
-
 import { useEffect, useRef } from 'react'
 
 interface Particle {
   x: number
   y: number
-  vx: number
-  vy: number
   size: number
+  speedX: number
+  speedY: number
   opacity: number
-  color: string
   pulse: number
   pulseSpeed: number
+  connected: boolean
 }
 
 export default function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animRef = useRef<number>(0)
+  const mouseRef = useRef({ x: -1000, y: -1000 })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -24,10 +24,7 @@ export default function ParticleBackground() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    let animId: number
     let particles: Particle[] = []
-    let mouseX = -9999
-    let mouseY = -9999
 
     const resize = () => {
       canvas.width = window.innerWidth
@@ -36,164 +33,126 @@ export default function ParticleBackground() {
     }
 
     const initParticles = () => {
-      const count = Math.floor((canvas.width * canvas.height) / 8000)
-
-      particles = Array.from(
-        { length: Math.min(count, 160) },
-        (): Particle => ({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2.5 + 0.5,
-          opacity: Math.random() * 0.6 + 0.2,
-          color:
-            Math.random() > 0.65
-              ? Math.random() > 0.5
-                ? '#FF6B00'
-                : '#ff9500'
-              : '#ffffff',
-          pulse: Math.random() * Math.PI * 2,
-          pulseSpeed: 0.02 + Math.random() * 0.03,
-        })
-      )
+      const count = Math.min(Math.floor((canvas.width * canvas.height) / 12000), 120)
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2.5 + 1,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.5 + 0.2,
+        pulse: Math.random() * Math.PI * 2,
+        pulseSpeed: Math.random() * 0.02 + 0.005,
+        connected: Math.random() > 0.3,
+      }))
     }
 
-    resize()
-    window.addEventListener('resize', resize)
-
-    const onMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX
-      mouseY = e.clientY
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY }
     }
 
-    const onMouseLeave = () => {
-      mouseX = -9999
-      mouseY = -9999
-    }
-
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseleave', onMouseLeave)
-
-    const draw = () => {
+    const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const p = particles[i]
-          const q = particles[j]
+      const mx = mouseRef.current.x
+      const my = mouseRef.current.y
 
-          const dx = p.x - q.x
-          const dy = p.y - q.y
+      // Update and draw particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i]
+
+        // Update position
+        p.x += p.speedX
+        p.y += p.speedY
+        p.pulse += p.pulseSpeed
+
+        // Wrap around edges
+        if (p.x < -10) p.x = canvas.width + 10
+        if (p.x > canvas.width + 10) p.x = -10
+        if (p.y < -10) p.y = canvas.height + 10
+        if (p.y > canvas.height + 10) p.y = -10
+
+        // Mouse interaction - gentle repulsion
+        const dx = p.x - mx
+        const dy = p.y - my
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 150) {
+          const force = (150 - dist) / 150
+          p.x += (dx / dist) * force * 1.5
+          p.y += (dy / dist) * force * 1.5
+        }
+
+        // Pulsing opacity
+        const currentOpacity = p.opacity + Math.sin(p.pulse) * 0.15
+
+        // Draw particle with glow
+        const glowSize = p.size * 3
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowSize)
+        gradient.addColorStop(0, `rgba(255, 107, 0, ${currentOpacity * 0.8})`)
+        gradient.addColorStop(0.4, `rgba(255, 107, 0, ${currentOpacity * 0.3})`)
+        gradient.addColorStop(1, 'rgba(255, 107, 0, 0)')
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, glowSize, 0, Math.PI * 2)
+        ctx.fillStyle = gradient
+        ctx.fill()
+
+        // Core particle
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 140, 50, ${currentOpacity})`
+        ctx.fill()
+      }
+
+      // Draw connections between nearby particles
+      for (let i = 0; i < particles.length; i++) {
+        if (!particles[i].connected) continue
+        for (let j = i + 1; j < particles.length; j++) {
+          if (!particles[j].connected) continue
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
           const dist = Math.sqrt(dx * dx + dy * dy)
 
-          const maxDist = 130
-
-          if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.25
-            const isOrange =
-              p.color !== '#ffffff' || q.color !== '#ffffff'
-
+          if (dist < 140) {
+            const opacity = (1 - dist / 140) * 0.12
             ctx.beginPath()
-            ctx.moveTo(p.x, p.y)
-            ctx.lineTo(q.x, q.y)
-
-            ctx.strokeStyle = isOrange
-              ? `rgba(255,107,0,${alpha * 0.9})`
-              : `rgba(255,255,255,${alpha * 0.35})`
-
-            ctx.lineWidth = 0.8
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`
+            ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
       }
 
-      // Particles
-      particles.forEach((p) => {
-        p.pulse += p.pulseSpeed
-
-        // FIXED BUG: radius can never become negative
-        const pulsedSize = Math.max(
-          0.1,
-          p.size + Math.sin(p.pulse) * 0.6
-        )
-
-        const pulsedOpacity =
-          p.opacity + Math.sin(p.pulse) * 0.15
-
-        const dx = p.x - mouseX
-        const dy = p.y - mouseY
+      // Draw connections to mouse
+      for (const p of particles) {
+        const dx = p.x - mx
+        const dy = p.y - my
         const dist = Math.sqrt(dx * dx + dy * dy)
-
-        const repelRadius = 140
-
-        if (dist < repelRadius && dist > 0) {
-          const force = (repelRadius - dist) / repelRadius
-
-          p.vx += (dx / dist) * force * 0.5
-          p.vy += (dy / dist) * force * 0.5
+        if (dist < 200) {
+          const opacity = (1 - dist / 200) * 0.2
+          ctx.beginPath()
+          ctx.moveTo(p.x, p.y)
+          ctx.lineTo(mx, my)
+          ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`
+          ctx.lineWidth = 0.8
+          ctx.stroke()
         }
+      }
 
-        const speed = Math.sqrt(
-          p.vx * p.vx + p.vy * p.vy
-        )
-
-        if (speed > 2.5) {
-          p.vx = (p.vx / speed) * 2.5
-          p.vy = (p.vy / speed) * 2.5
-        }
-
-        p.vx *= 0.98
-        p.vy *= 0.98
-
-        p.x += p.vx
-        p.y += p.vy
-
-        if (p.x < 0) p.x = canvas.width
-        if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height
-        if (p.y > canvas.height) p.y = 0
-
-        if (p.color !== '#ffffff') {
-          ctx.shadowBlur = 12
-          ctx.shadowColor = p.color
-        } else {
-          ctx.shadowBlur = 4
-          ctx.shadowColor = 'rgba(255,255,255,0.4)'
-        }
-
-        ctx.beginPath()
-        ctx.arc(
-          p.x,
-          p.y,
-          pulsedSize,
-          0,
-          Math.PI * 2
-        )
-
-        ctx.fillStyle = p.color
-        ctx.globalAlpha = Math.min(
-          Math.max(pulsedOpacity, 0),
-          1
-        )
-
-        ctx.fill()
-        ctx.shadowBlur = 0
-      })
-
-      ctx.globalAlpha = 1
-      animId = requestAnimationFrame(draw)
+      animRef.current = requestAnimationFrame(animate)
     }
 
-    draw()
+    resize()
+    window.addEventListener('resize', resize)
+    window.addEventListener('mousemove', handleMouseMove)
+    animRef.current = requestAnimationFrame(animate)
 
     return () => {
-      cancelAnimationFrame(animId)
-
       window.removeEventListener('resize', resize)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseleave', onMouseLeave)
+      window.removeEventListener('mousemove', handleMouseMove)
+      cancelAnimationFrame(animRef.current)
     }
   }, [])
 
@@ -202,9 +161,12 @@ export default function ParticleBackground() {
       ref={canvasRef}
       style={{
         position: 'fixed',
-        inset: 0,
-        zIndex: 0,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         pointerEvents: 'none',
+        zIndex: 0,
       }}
     />
   )
