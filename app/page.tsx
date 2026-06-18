@@ -1,28 +1,33 @@
-import Navbar from '@/app/components/Navbar'
-import Hero from '@/app/components/Hero'
-import About from './components/About'
+import ParticleBackground from './components/ParticleBackground'
+import CustomCursor from './components/CustomCursor'
+import Navbar from './components/Navbar'
+import Hero from './components/Hero'
 import Services from './components/Services'
-import MembershipPlans from './components/MembershipPlans'
+import About from './components/About'
 import Trainers from './components/Trainers'
+import MembershipPlans from './components/MembershipPlans'
+import Gallery from './components/Gallery'
 import FAQ from './components/FAQ'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
-import Gallery from './components/Gallery'
 
-
-export default function Home() {
+export default function App() {
   return (
-    <main style={{ position: 'relative', zIndex: 1 }}>
+    <div style={{ background: '#080808', minHeight: '100vh', position: 'relative' }}>
+      <ParticleBackground />
+      <CustomCursor />
       <Navbar />
-      <Hero />
-      <About/>
-      <Services/>
-      <MembershipPlans/>
-      <Trainers/>
-      <Gallery/>
-      <FAQ/>
-      <Contact/>
-      <Footer/>
-    </main>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Hero />
+        <Services />
+        <About />
+        <Trainers />
+        <MembershipPlans />
+        <Gallery />
+        <FAQ />
+        <Contact />
+        <Footer />
+      </div>
+    </div>
   )
 }

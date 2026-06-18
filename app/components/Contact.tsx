@@ -179,6 +179,7 @@ export default function Contact() {
                   gap: 10,
                   background: sent ? '#22c55e' : undefined,
                   opacity: sending ? 0.7 : 1,
+                  cursor: 'pointer',
                 }}
               >
                 {sent ? (

@@ -122,6 +122,13 @@ export default function Gallery() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [lightbox, closeLightbox, navigateLightbox])
 
+  const handleBookTour = () => {
+    const el = document.getElementById('pricing')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   const fade = (delay: number): React.CSSProperties => ({
     opacity: visible ? 1 : 0,
     transform: visible ? 'translateY(0)' : 'translateY(40px)',
@@ -245,12 +252,14 @@ export default function Gallery() {
           </p>
           <button
             className="btn-primary"
+            onClick={handleBookTour}
             style={{
               padding: '16px 44px',
               fontSize: 12,
               display: 'inline-flex',
               alignItems: 'center',
               gap: 10,
+              cursor: 'pointer',
             }}
           >
             Book a Free Tour <ArrowUpRight size={16} />

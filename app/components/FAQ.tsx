@@ -27,6 +27,13 @@ export default function FAQ() {
     return () => observer.disconnect()
   }, [])
 
+  const handleContactUs = () => {
+    const el = document.getElementById('contact')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   const fade = (delay: number): React.CSSProperties => ({
     opacity: visible ? 1 : 0,
     transform: visible ? 'translateY(0)' : 'translateY(40px)',
@@ -72,6 +79,7 @@ export default function FAQ() {
             </p>
             <button
               className="btn-primary"
+              onClick={handleContactUs}
               style={{
                 ...fade(0.32),
                 padding: '14px 28px',
@@ -79,6 +87,7 @@ export default function FAQ() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 10,
+                cursor: 'pointer',
               }}
             >
               Contact Us <ArrowRight size={14} />

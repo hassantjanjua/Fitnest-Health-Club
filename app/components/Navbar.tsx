@@ -1,11 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Menu, X, ArrowRight } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 
 const navLinks = [
   { label: 'Home', href: '#home' },
   { label: 'Services', href: '#services' },
+  { label: 'About', href: '#about' },
+  { label: 'Trainers', href: '#trainers' },
+  { label: 'Plans', href: '#plans' },
   { label: 'Gallery', href: '#gallery' },
+  { label: 'FAQ', href: '#faq' },
+  { label: 'Contact', href: '#contact' },
 ]
 
 export default function Navbar() {
@@ -85,7 +90,7 @@ export default function Navbar() {
           <div className="nav-links" style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 40,
+            gap: 28,
           }}>
             {navLinks.map(link => {
               const isActive = activeLink === link.href
@@ -124,22 +129,6 @@ export default function Navbar() {
                 </a>
               )
             })}
-          </div>
-
-          {/* Desktop CTA */}
-          <div className="nav-cta-desktop" style={{ display: 'flex' }}>
-            <button
-              className="btn-primary"
-              style={{
-                padding: '12px 28px',
-                fontSize: 10,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              Join Now <ArrowRight size={13} />
-            </button>
           </div>
 
           {/* Mobile hamburger */}
@@ -200,24 +189,6 @@ export default function Navbar() {
             {link.label}
           </a>
         ))}
-
-        <button
-          className="btn-primary"
-          onClick={() => setMobileOpen(false)}
-          style={{
-            padding: '16px 40px',
-            fontSize: 12,
-            marginTop: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            opacity: mobileOpen ? 1 : 0,
-            transform: mobileOpen ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1) 0.4s',
-          }}
-        >
-          Join Now <ArrowRight size={15} />
-        </button>
       </div>
     </>
   )
