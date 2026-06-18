@@ -2,7 +2,30 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Zap, Crown, Star, ArrowRight } from 'lucide-react'
 
-const plans = [
+type MembershipPlan = {
+  _id?: string
+  icon: React.ElementType
+  name: string
+  price: number
+  period: string
+  tag: string
+  featured: boolean
+  savings?: number
+  features: string[]
+  cta: string
+}
+
+type PlanApiItem = {
+  _id?: string
+  name?: string
+  price?: number
+  period?: string
+  tag?: string
+  featured?: boolean
+  features?: string[]
+}
+
+const fallbackPlans: MembershipPlan[] = [
   {
     icon: Star,
     name: 'Monthly',
@@ -62,6 +85,7 @@ const plans = [
 
 export default function MembershipPlans() {
   const [visible, setVisible] = useState(false)
+  const [plans, setPlans] = useState<MembershipPlan[]>(fallbackPlans)
   const ref = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -71,6 +95,30 @@ export default function MembershipPlans() {
     )
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+
+    async function loadPlans() {
+      try {
+        const res = await fetch('/api/plans')
+        const data = await res.json()
+
+        if (!res.ok || !Array.isArray(data.plans)) return
+
+        const dbPlans = data.plans.map(normalizePlan).filter(Boolean) as MembershipPlan[]
+        if (alive && dbPlans.length > 0) setPlans(dbPlans)
+      } catch {
+        // Keep the static fallback visible if the database cannot be reached.
+      }
+    }
+
+    loadPlans()
+
+    return () => {
+      alive = false
+    }
   }, [])
 
   const fade = (delay: number): React.CSSProperties => ({
@@ -157,7 +205,7 @@ export default function MembershipPlans() {
 }
 
 function PlanCard({ plan, fadeStyle }: {
-  plan: typeof plans[0]
+  plan: MembershipPlan
   fadeStyle: React.CSSProperties
 }) {
   const [hovered, setHovered] = useState(false)
@@ -340,7 +388,7 @@ function FeatureItem({ feature, featured, hovered, index }: {
   )
 }
 
-function PlanButton({ plan }: { plan: typeof plans[0] }) {
+function PlanButton({ plan }: { plan: MembershipPlan }) {
   const [btnHovered, setBtnHovered] = useState(false)
 
   if (plan.featured) {
@@ -387,4 +435,22 @@ function PlanButton({ plan }: { plan: typeof plans[0] }) {
       {plan.cta} <ArrowRight size={14} />
     </button>
   )
+}
+
+function normalizePlan(plan: PlanApiItem, index: number): MembershipPlan | null {
+  if (!plan.name || typeof plan.price !== 'number') return null
+
+  const icons = [Star, Zap, Crown]
+
+  return {
+    _id: plan._id,
+    icon: plan.featured ? Zap : icons[index % icons.length],
+    name: plan.name,
+    price: plan.price,
+    period: plan.period || 'month',
+    tag: plan.tag || (plan.featured ? 'Best Value' : 'Membership'),
+    featured: Boolean(plan.featured),
+    features: Array.isArray(plan.features) && plan.features.length > 0 ? plan.features.filter(Boolean) : ['Full gym access'],
+    cta: `Start ${plan.name}`,
+  }
 }

@@ -24,7 +24,35 @@ const InstagramIcon = ({ size = 12 }: { size?: number }) => (
   </svg>
 )
 
-const trainers = [
+type TrainerProfile = {
+  _id?: string
+  name: string
+  role: string
+  exp: string
+  speciality: string
+  cert: string
+  initials: string
+  color: string
+  bio: string
+  achievements: string[]
+  approach: string
+  funFact: string
+  social: string
+}
+
+type TrainerApiItem = {
+  _id?: string
+  name?: string
+  role?: string
+  experience?: string
+  speciality?: string
+  certifications?: string
+  initials?: string
+  color?: string
+  instagram?: string
+}
+
+const fallbackTrainers: TrainerProfile[] = [
   {
     name: 'Ahmed Raza',
     role: 'Head Strength Coach',
@@ -85,7 +113,8 @@ const trainers = [
 
 export default function Trainers() {
   const [visible, setVisible] = useState(false)
-  const [selectedTrainer, setSelectedTrainer] = useState<typeof trainers[0] | null>(null)
+  const [trainers, setTrainers] = useState<TrainerProfile[]>(fallbackTrainers)
+  const [selectedTrainer, setSelectedTrainer] = useState<TrainerProfile | null>(null)
   const ref = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -97,6 +126,30 @@ export default function Trainers() {
     )
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+
+    async function loadTrainers() {
+      try {
+        const res = await fetch('/api/trainers')
+        const data = await res.json()
+
+        if (!res.ok || !Array.isArray(data.trainers)) return
+
+        const dbTrainers = data.trainers.map(normalizeTrainer).filter(Boolean) as TrainerProfile[]
+        if (alive && dbTrainers.length > 0) setTrainers(dbTrainers)
+      } catch {
+        // Keep the static fallback visible if the database cannot be reached.
+      }
+    }
+
+    loadTrainers()
+
+    return () => {
+      alive = false
+    }
   }, [])
 
   // Prevent body scroll when modal is open
@@ -251,7 +304,7 @@ export default function Trainers() {
           >
             {trainers.map((trainer, i) => (
               <TrainerCard
-                key={trainer.name}
+                key={trainer._id || trainer.name}
                 trainer={trainer}
                 index={i}
                 fadeStyle={fade(0.1 + i * 0.08)}
@@ -300,7 +353,7 @@ function TrainerCard({
   fadeStyle,
   onViewProfile,
 }: {
-  trainer: (typeof trainers)[0]
+  trainer: TrainerProfile
   index: number
   fadeStyle: React.CSSProperties
   onViewProfile: () => void
@@ -520,7 +573,7 @@ function TrainerProfileModal({
   trainer,
   onClose,
 }: {
-  trainer: typeof trainers[0]
+  trainer: TrainerProfile
   onClose: () => void
 }) {
   const modalRef = useRef<HTMLDivElement>(null)
@@ -935,4 +988,29 @@ function TrainerProfileModal({
       </div>
     </div>
   )
+}
+
+function normalizeTrainer(trainer: TrainerApiItem): TrainerProfile | null {
+  if (!trainer.name || !trainer.role) return null
+
+  const firstName = trainer.name.split(' ')[0] || 'This trainer'
+  const speciality = trainer.speciality || 'Personal training'
+  const cert = trainer.certifications || 'Certified trainer'
+  const exp = trainer.experience || 'Experienced'
+
+  return {
+    _id: trainer._id,
+    name: trainer.name,
+    role: trainer.role,
+    exp,
+    speciality,
+    cert,
+    initials: (trainer.initials || trainer.name.split(' ').map(part => part[0]).join('')).slice(0, 2).toUpperCase(),
+    color: trainer.color || '#FF6B00',
+    bio: `${trainer.name} specializes in ${speciality.toLowerCase()} and brings ${exp.toLowerCase()} of coaching experience to Fitnest.`,
+    achievements: [cert, speciality, `${exp} experience`],
+    approach: `Personalized coaching focused on form, consistency, and measurable progress.`,
+    funFact: `${firstName} is ready to help members train with confidence.`,
+    social: trainer.instagram || '@fitnestlahore',
+  }
 }

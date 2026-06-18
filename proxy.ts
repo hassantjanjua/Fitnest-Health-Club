@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/app/lib/auth'
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Protect all /admin routes except login and otp
   if (pathname.startsWith('/admin')) {
     const isAuthPage = pathname === '/admin/login' || pathname === '/admin/otp'
     if (isAuthPage) return NextResponse.next()

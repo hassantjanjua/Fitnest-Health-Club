@@ -2,7 +2,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Expand, X, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react'
 
-const galleryItems = [
+type GalleryItem = {
+  _id?: string
+  src: string
+  alt: string
+  category: string
+  title: string
+  desc: string
+  span: 'normal' | 'wide' | 'tall'
+}
+
+type GalleryApiItem = {
+  _id?: string
+  url?: string
+  caption?: string
+  category?: string
+  order?: number
+}
+
+const fallbackGalleryItems: GalleryItem[] = [
   {
     src: 'https://images.pexels.com/photos/28805366/pexels-photo-28805366.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
     alt: 'Weight training session',
@@ -69,10 +87,9 @@ const galleryItems = [
   },
 ]
 
-const categories = ['All', 'Strength', 'CrossFit', 'Training', 'Facility', 'Performance', 'Community']
-
 export default function Gallery() {
   const [visible, setVisible] = useState(false)
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(fallbackGalleryItems)
   const [activeFilter, setActiveFilter] = useState('All')
   const [hoveredItem, setHoveredItem] = useState<number | null>(null)
   const [lightbox, setLightbox] = useState<number | null>(null)
@@ -86,6 +103,32 @@ export default function Gallery() {
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    let alive = true
+
+    async function loadGallery() {
+      try {
+        const res = await fetch('/api/gallery')
+        const data = await res.json()
+
+        if (!res.ok || !Array.isArray(data.images)) return
+
+        const dbItems = data.images.map(normalizeGalleryItem).filter(Boolean) as GalleryItem[]
+        if (alive && dbItems.length > 0) setGalleryItems(dbItems)
+      } catch {
+        // Keep the static fallback visible if the database cannot be reached.
+      }
+    }
+
+    loadGallery()
+
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const categories = ['All', ...Array.from(new Set(galleryItems.map(item => item.category).filter(Boolean)))]
 
   const filteredItems = activeFilter === 'All'
     ? galleryItems
@@ -213,7 +256,7 @@ export default function Gallery() {
         }} className="gallery-grid">
           {filteredItems.map((item, i) => (
             <GalleryCard
-              key={`${item.title}-${activeFilter}`}
+              key={`${item._id || item.title}-${activeFilter}`}
               item={item}
               index={i}
               isHovered={hoveredItem === i}
@@ -462,7 +505,7 @@ function FilterButton({ cat, isActive, onClick }: { cat: string; isActive: boole
 }
 
 function GalleryCard({ item, index, isHovered, onHover, onLeave, onClick, visible }: {
-  item: typeof galleryItems[0]
+  item: GalleryItem
   index: number
   isHovered: boolean
   onHover: () => void
@@ -588,6 +631,30 @@ function GalleryCard({ item, index, isHovered, onHover, onLeave, onClick, visibl
       }} />
     </div>
   )
+}
+
+function normalizeGalleryItem(item: GalleryApiItem, index: number): GalleryItem | null {
+  if (!item.url) return null
+
+  const category = toTitleCase(item.category || 'general')
+  const caption = item.caption?.trim() || `${category} at Fitnest`
+  const spans: GalleryItem['span'][] = ['tall', 'wide', 'normal', 'normal', 'wide', 'tall']
+
+  return {
+    _id: item._id,
+    src: item.url,
+    alt: caption,
+    category,
+    title: caption,
+    desc: `${category} gallery image from Fitnest Health Club.`,
+    span: spans[index % spans.length],
+  }
+}
+
+function toTitleCase(value: string) {
+  return value
+    .replace(/[-_]/g, ' ')
+    .replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 }
 
 function GalleryStat({ stat, index }: { stat: { number: string; label: string }; index: number }) {
