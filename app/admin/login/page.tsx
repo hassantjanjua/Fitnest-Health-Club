@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import FitnestLogo from '@/app/components/FitnestLogo'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -49,14 +50,7 @@ export default function AdminLogin() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, background: 'var(--accent-orange)', clipPath: 'polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))', marginBottom: 16 }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 32, letterSpacing: '0.1em', color: '#fff' }}>
-            FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
-          </div>
+          <FitnestLogo size="lg" />
           <div style={{ fontSize: 10, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: 4 }}>
             Admin Portal
           </div>
@@ -101,7 +95,7 @@ export default function AdminLogin() {
             </label>
             <input
               type="password"
-              placeholder="••••••••••"
+              placeholder="********"
               value={password}
               onChange={e => setPassword(e.target.value)}
               style={inp}
@@ -118,7 +112,7 @@ export default function AdminLogin() {
             onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#ff7a00' }}
             onMouseLeave={e => { if (!loading) e.currentTarget.style.background = 'var(--accent-orange)' }}
           >
-            {loading ? 'Sending OTP...' : 'Send OTP →'}
+            {loading ? 'Sending OTP...' : 'Send OTP ->'}
           </button>
         </div>
 

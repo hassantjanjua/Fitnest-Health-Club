@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyOTP, signToken } from '@/app/lib/auth'
+import { getSessionMaxAge, normalizeSessionDuration, verifyOTP, signToken } from '@/app/lib/auth'
 import { connectDB } from '@/app/lib/mongodb'
 import Admin from '@/app/models/Admin'
 
@@ -24,14 +24,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Admin account is disabled' }, { status: 401 })
     }
 
-    const token = signToken({ email: normalizedEmail, role: 'admin' })
+    const sessionDuration = normalizeSessionDuration(admin.sessionDuration)
+    const token = signToken({
+      id: admin._id.toString(),
+      email: normalizedEmail,
+      name: admin.name,
+      role: admin.role,
+      assignmentScope: admin.assignmentScope,
+      assignedTo: admin.assignedTo,
+      sessionDuration,
+    }, sessionDuration)
 
     const res = NextResponse.json({ success: true })
     res.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 8, // 8 hours
+      maxAge: getSessionMaxAge(sessionDuration),
       path: '/',
     })
 

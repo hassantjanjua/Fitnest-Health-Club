@@ -1,14 +1,41 @@
 import jwt from 'jsonwebtoken'
+import type { JwtPayload } from 'jsonwebtoken'
 
 const SECRET = process.env.JWT_SECRET!
 
-export function signToken(payload: object) {
-  return jwt.sign(payload, SECRET, { expiresIn: '8h' })
+export const SESSION_DURATIONS = {
+  '1d': { label: '1 day', seconds: 60 * 60 * 24 },
+  '1w': { label: '1 week', seconds: 60 * 60 * 24 * 7 },
+  '1m': { label: '1 month', seconds: 60 * 60 * 24 * 30 },
+} as const
+
+export type SessionDuration = keyof typeof SESSION_DURATIONS
+
+export type AdminTokenPayload = JwtPayload & {
+  id?: string
+  email?: string
+  name?: string
+  role?: string
+  assignmentScope?: string
+  assignedTo?: string
+  sessionDuration?: SessionDuration
+}
+
+export function normalizeSessionDuration(value: unknown): SessionDuration {
+  return value === '1w' || value === '1m' ? value : '1d'
+}
+
+export function getSessionMaxAge(value: unknown) {
+  return SESSION_DURATIONS[normalizeSessionDuration(value)].seconds
+}
+
+export function signToken(payload: object, sessionDuration: unknown = '1d') {
+  return jwt.sign(payload, SECRET, { expiresIn: getSessionMaxAge(sessionDuration) })
 }
 
 export function verifyToken(token: string) {
   try {
-    return jwt.verify(token, SECRET) as any
+    return jwt.verify(token, SECRET) as AdminTokenPayload
   } catch {
     return null
   }

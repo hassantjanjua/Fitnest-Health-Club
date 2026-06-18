@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import FitnestLogo from './FitnestLogo'
 
 const navLinks = [
   { label: 'Home', href: '#home' },
@@ -70,20 +71,15 @@ export default function Navbar() {
 
           {/* Logo */}
           <a href="#home" style={{
-            fontFamily: 'Bebas Neue, sans-serif',
-            fontSize: 28,
-            color: '#fff',
             textDecoration: 'none',
-            letterSpacing: '0.08em',
             display: 'flex',
             alignItems: 'center',
-            gap: 3,
             transition: 'transform 0.3s ease',
           }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
-            FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
+            <FitnestLogo size="sm" />
           </a>
 
           {/* Desktop Links */}

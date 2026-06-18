@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import FitnestLogo from '@/app/components/FitnestLogo'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '▦' },
-  { label: 'Customers', href: '/admin/dashboard/customers', icon: '◉' },
-  { label: 'Pricing Plans', href: '/admin/dashboard/pricing', icon: '◈' },
-  { label: 'Trainers', href: '/admin/dashboard/trainers', icon: '◎' },
-  { label: 'Gallery', href: '/admin/dashboard/gallery', icon: '◧' },
-  { label: 'Settings', href: '/admin/dashboard/settings', icon: '◌' },
+  { label: 'Overview', href: '/admin/dashboard', icon: '□' },
+  { label: 'Customers', href: '/admin/dashboard/customers', icon: '◎' },
+  { label: 'Pricing Plans', href: '/admin/dashboard/pricing', icon: '◆' },
+  { label: 'Trainers', href: '/admin/dashboard/trainers', icon: '●' },
+  { label: 'Gallery', href: '/admin/dashboard/gallery', icon: '▧' },
+  { label: 'User Access', href: '/admin/dashboard/settings', icon: '○' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,40 +19,60 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     await fetch('/api/admin/logout', { method: 'POST' })
     router.push('/admin/login')
-  }
+  }, [router])
+
+  useEffect(() => {
+    let logoutTimer: ReturnType<typeof setTimeout> | undefined
+
+    async function syncSessionExpiry() {
+      try {
+        const res = await fetch('/api/admin/session')
+        if (!res.ok) {
+          router.push('/admin/login')
+          return
+        }
+
+        const data = await res.json()
+        const expiresAt = Number(data.session?.expiresAt || 0)
+        const delay = expiresAt - Date.now()
+
+        if (delay <= 0) {
+          await handleLogout()
+          return
+        }
+
+        logoutTimer = setTimeout(handleLogout, delay)
+      } catch {
+        router.push('/admin/login')
+      }
+    }
+
+    syncSessionExpiry()
+
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer)
+    }
+  }, [handleLogout, router])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#080808', fontFamily: 'Inter, sans-serif' }}>
-
-      {/* Sidebar */}
-      <div style={{
+    <div className="dashboard-shell" style={{ display: 'flex', minHeight: '100vh', background: '#080808', fontFamily: 'Inter, sans-serif' }}>
+      <div className="dashboard-sidebar" style={{
         width: sidebarOpen ? 240 : 64, flexShrink: 0,
         background: '#0c0c0c', borderRight: '1px solid rgba(255,107,0,0.1)',
         display: 'flex', flexDirection: 'column',
         transition: 'width 0.3s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden', position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 100,
       }}>
-        {/* Logo */}
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 36, height: 36, background: 'var(--accent-orange)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', clipPath: 'polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
+        <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <FitnestLogo size="sm" compact={!sidebarOpen} />
           {sidebarOpen && (
-            <div>
-              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 18, color: '#fff', letterSpacing: '0.08em', lineHeight: 1 }}>
-                FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
-              </div>
-              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Admin Panel</div>
-            </div>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Admin Panel</div>
           )}
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {navItems.map(item => {
             const active = pathname === item.href
@@ -72,13 +93,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)' }}}
               >
                 <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
-                {sidebarOpen && item.label}
+                <span>{sidebarOpen && item.label}</span>
               </Link>
             )
           })}
         </nav>
 
-        {/* Bottom */}
         <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <button
             onClick={() => setSidebarOpen(v => !v)}
@@ -86,7 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
           >
-            {sidebarOpen ? '← Collapse' : '→'}
+            {sidebarOpen ? '< Collapse' : '>'}
           </button>
           <button
             onClick={handleLogout}
@@ -94,15 +114,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#ef4444' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = 'rgba(239,68,68,0.7)' }}
           >
-            {sidebarOpen ? '⏻ Logout' : '⏻'}
+            {sidebarOpen ? 'Logout' : 'X'}
           </button>
         </div>
       </div>
 
-      {/* Main content */}
-      <div style={{ flex: 1, marginLeft: sidebarOpen ? 240 : 64, transition: 'margin-left 0.3s cubic-bezier(0.16,1,0.3,1)', minHeight: '100vh' }}>
-        {/* Top bar */}
-        <div style={{ height: 64, borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(12,12,12,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div className="dashboard-main" style={{ flex: 1, marginLeft: sidebarOpen ? 240 : 64, transition: 'margin-left 0.3s cubic-bezier(0.16,1,0.3,1)', minHeight: '100vh' }}>
+        <div className="dashboard-topbar" style={{ height: 64, borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(12,12,12,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>
             {navItems.find(n => n.href === pathname)?.label || 'Dashboard'}
           </div>
@@ -112,8 +130,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        {/* Page content */}
-        <div style={{ padding: '32px' }}>
+        <div className="dashboard-content" style={{ padding: '32px' }}>
           {children}
         </div>
       </div>

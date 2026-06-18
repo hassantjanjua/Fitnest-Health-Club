@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ArrowRight, MapPin, Phone, Mail } from 'lucide-react'
+import FitnestLogo from './FitnestLogo'
 
 // SVG icons for social media
 const InstagramIcon = () => (
@@ -81,15 +82,11 @@ export default function Footer() {
           {/* Brand column */}
           <div>
             <a href="#home" style={{
-              fontFamily: 'Bebas Neue, sans-serif',
-              fontSize: 36,
-              color: '#fff',
               textDecoration: 'none',
-              letterSpacing: '0.08em',
               display: 'inline-block',
               marginBottom: 20,
             }}>
-              FIT<span style={{ color: 'var(--accent-orange)' }}>NEST</span>
+              <FitnestLogo size="md" />
             </a>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.8, marginBottom: 24 }}>
               Pakistan&apos;s premier fitness destination. Transforming lives since 2017 with world-class training and an unmatched community.
