@@ -595,14 +595,21 @@ export default function Services() {
     setTimeout(() => setSelectedService(null), 300);
   };
 
-  const navigateToPricing = () => {
+  const navigateToContact = () => {
     closeModal();
     setTimeout(() => {
-      const pricingSection = document.getElementById('pricing');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const contactSection = document.getElementById('contact');
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 350);
+  };
+
+  const handleGetConsultation = () => {
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
@@ -684,10 +691,14 @@ export default function Services() {
             <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>
               Not sure which program is right for you?
             </p>
-            <button className="btn-primary" style={{
-              padding: '16px 44px', fontSize: 12,
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-            }}>
+            <button 
+              onClick={handleGetConsultation}
+              className="btn-primary" 
+              style={{
+                padding: '16px 44px', fontSize: 12,
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+              }}
+            >
               Get a Free Consultation <ChevronRight size={14} />
             </button>
           </div>
@@ -698,7 +709,7 @@ export default function Services() {
         service={selectedService} 
         isOpen={isModalOpen} 
         onClose={closeModal}
-        onNavigatePricing={navigateToPricing}
+        onNavigatePricing={navigateToContact}
       />
     </>
   )
