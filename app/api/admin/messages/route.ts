@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/app/lib/auth'
+import { requireAdminPage } from '@/app/lib/admin-authz'
 import { connectDB } from '@/app/lib/mongodb'
 import ContactMessage from '@/app/models/ContactMessage'
 import { sendContactReplyEmail } from '@/app/lib/email'
 
-function checkAuth(req: NextRequest) {
-  const token = req.cookies.get('admin_token')?.value
-  if (!token) return false
-  return verifyToken(token)
-}
-
 // GET all messages
 export async function GET(req: NextRequest) {
-  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const guard = requireAdminPage(req, 'messages')
+  if (guard.response) return guard.response
   await connectDB()
   const messages = await ContactMessage.find({}).sort({ createdAt: -1 })
   return NextResponse.json({ messages })
@@ -20,16 +15,27 @@ export async function GET(req: NextRequest) {
 
 // PUT — mark status or send reply
 export async function PUT(req: NextRequest) {
-  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const guard = requireAdminPage(req, 'messages')
+  if (guard.response) return guard.response
   await connectDB()
   const { id, status, reply } = await req.json()
 
-  const updateData: any = {}
-  if (status) updateData.status = status
+  const updateData: {
+    status?: 'new' | 'replied'
+    reply?: string
+    repliedAt?: Date
+  } = {}
+
+  if (status) {
+    if (!['new', 'replied'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
+    updateData.status = status
+  }
 
   // If admin is sending a reply
-  if (reply) {
-    updateData.reply = reply
+  if (typeof reply === 'string' && reply.trim()) {
+    updateData.reply = reply.trim()
     updateData.status = 'replied'
     updateData.repliedAt = new Date()
 
@@ -37,7 +43,7 @@ export async function PUT(req: NextRequest) {
     const msg = await ContactMessage.findById(id)
     if (msg) {
       try {
-        await sendContactReplyEmail(msg.email, reply)
+        await sendContactReplyEmail(msg.email, reply.trim())
       } catch (err) {
         console.error('Reply email failed:', err)
       }
@@ -50,7 +56,8 @@ export async function PUT(req: NextRequest) {
 
 // DELETE message
 export async function DELETE(req: NextRequest) {
-  if (!checkAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const guard = requireAdminPage(req, 'messages')
+  if (guard.response) return guard.response
   await connectDB()
   const { id } = await req.json()
   await ContactMessage.findByIdAndDelete(id)

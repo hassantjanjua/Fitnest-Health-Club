@@ -1,18 +1,23 @@
 import nodemailer from 'nodemailer'
 
+const smtpHost = process.env.SMTP_HOST?.trim()
+const smtpPort = Number(process.env.SMTP_PORT?.trim() || 587)
+const smtpUser = process.env.SMTP_USER?.trim()
+const smtpPass = process.env.SMTP_PASS?.trim()
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false,
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: smtpUser,
+    pass: smtpPass,
   },
 })
 
 export async function sendOTPEmail(email: string, otp: string) {
   await transporter.sendMail({
-    from: `"Fitnest Admin" <${process.env.SMTP_USER}>`,
+    from: `"Fitnest Admin" <${smtpUser}>`,
     to: email,
     subject: 'Your Fitnest Admin OTP',
     html: `
@@ -46,11 +51,11 @@ export async function sendContactNotificationEmail(message: {
   phone?: string
   message: string
 }) {
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER
+  const adminEmail = process.env.ADMIN_EMAIL?.trim() || smtpUser
   if (!adminEmail) return
 
   await transporter.sendMail({
-    from: `"Fitnest Website" <${process.env.SMTP_USER}>`,
+    from: `"Fitnest Website" <${smtpUser}>`,
     to: adminEmail,
     replyTo: message.email,
     subject: `New Fitnest contact message from ${message.name}`,
@@ -69,9 +74,36 @@ export async function sendContactNotificationEmail(message: {
   })
 }
 
+export async function sendContactConfirmationEmail(message: {
+  name: string
+  email: string
+  phone?: string
+  message: string
+}) {
+  await transporter.sendMail({
+    from: `"Fitnest Health Club" <${smtpUser}>`,
+    to: message.email,
+    subject: 'We received your Fitnest message',
+    html: `
+      <div style="background:#0a0a0a;padding:32px;font-family:Inter,sans-serif;max-width:560px;margin:0 auto;">
+        <div style="background:#FF6B00;padding:2px 0;margin-bottom:24px;"></div>
+        <h1 style="color:#fff;font-size:24px;margin:0 0 16px;">Thanks, ${escapeHtml(message.name)}</h1>
+        <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.7;margin:0 0 18px;">
+          We received your message. Our team will contact you soon during operating hours.
+        </p>
+        <div style="background:#111;border:1px solid rgba(255,107,0,0.25);padding:18px;color:rgba(255,255,255,0.78);line-height:1.7;">
+          <strong style="color:#fff;">Your message:</strong><br />
+          ${escapeHtml(message.message).replaceAll('\n', '<br />')}
+        </div>
+        <p style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:24px;">Fitnest Health Club, Model Town Lahore</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendContactReplyEmail(email: string, reply: string) {
   await transporter.sendMail({
-    from: `"Fitnest Health Club" <${process.env.SMTP_USER}>`,
+    from: `"Fitnest Health Club" <${smtpUser}>`,
     to: email,
     subject: 'Reply from Fitnest Health Club',
     html: `

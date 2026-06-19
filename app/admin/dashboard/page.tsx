@@ -2,19 +2,26 @@
 
 import { useEffect, useState } from 'react'
 
+type Customer = {
+  status?: string
+  totalPaid?: number
+}
+
+type Message = {
+  _id: string
+  name: string
+  email: string
+  status?: string
+}
+
 export default function DashboardOverview() {
-  const [customers, setCustomers] = useState<any[]>([])
-  const [trainers, setTrainers] = useState<any[]>([])
-  const [messages, setMessages] = useState<any[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
 
   useEffect(() => {
     fetch('/api/admin/customers')
       .then(r => r.json())
       .then(d => setCustomers(d.customers || []))
-
-    fetch('/api/admin/trainers')
-      .then(r => r.json())
-      .then(d => setTrainers(d.trainers || []))
 
     fetch('/api/admin/messages')
       .then(r => r.json())
@@ -22,39 +29,16 @@ export default function DashboardOverview() {
   }, [])
 
   const activeCount = customers.filter(c => c.status === 'active').length
-  const revenue = customers.reduce((sum: number, c: any) => sum + (c.totalPaid || 0), 0)
-  const unreadCount = messages.filter(m => m.status === 'new').length
-  const recentCustomers = customers.slice(0, 5)
+  const revenue = customers.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
+  const notRepliedCount = messages.filter(m => m.status !== 'replied').length
   const recentMessages = messages.slice(0, 4)
 
   const stats = [
     { label: 'Total Members', value: customers.length, icon: '◉', color: '#FF6B00' },
     { label: 'Active Members', value: activeCount, icon: '◎', color: '#22c55e' },
     { label: 'Total Revenue', value: '₨' + revenue.toLocaleString(), icon: '◈', color: '#3b82f6' },
-    { label: 'New Messages', value: unreadCount, icon: '✉', color: '#a855f7' },
+    { label: 'Not Replied', value: notRepliedCount, icon: '✉', color: '#a855f7' },
   ]
-
-  function statusBadge(status: string): React.CSSProperties {
-    const map: Record<string, { bg: string; color: string; border: string }> = {
-      new: { bg: 'rgba(255,107,0,0.12)', color: '#FF6B00', border: 'rgba(255,107,0,0.25)' },
-      read: { bg: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: 'rgba(59,130,246,0.25)' },
-      replied: { bg: 'rgba(34,197,94,0.12)', color: '#22c55e', border: 'rgba(34,197,94,0.25)' },
-    }
-
-    const s = map[status] ?? map.read
-
-    return {
-      fontSize: 9,
-      fontWeight: 700,
-      padding: '2px 7px',
-      borderRadius: 2,
-      textTransform: 'uppercase',
-      letterSpacing: '0.1em',
-      background: s.bg,
-      color: s.color,
-      border: `1px solid ${s.border}`,
-    }
-  }
 
   return (
     <div>
@@ -112,7 +96,7 @@ export default function DashboardOverview() {
               color: '#fff',
             }}>
               {s.value}
-              {s.label === 'New Messages' && unreadCount > 0 && (
+              {s.label === 'Not Replied' && notRepliedCount > 0 && (
                 <span style={{
                   width: 8,
                   height: 8,
@@ -181,7 +165,7 @@ export default function DashboardOverview() {
                 Recent Messages
               </span>
 
-              {unreadCount > 0 && (
+              {notRepliedCount > 0 && (
                 <div style={{
                   background: 'var(--accent-orange)',
                   color: '#fff',
@@ -193,7 +177,7 @@ export default function DashboardOverview() {
                   justifyContent: 'center',
                   fontSize: 10,
                 }}>
-                  {unreadCount}
+                  {notRepliedCount}
                 </div>
               )}
             </div>
@@ -219,7 +203,7 @@ export default function DashboardOverview() {
                 No messages yet
               </div>
             ) : (
-              recentMessages.map((msg: any) => (
+              recentMessages.map((msg) => (
                 <div
                   key={msg._id}
                   style={{

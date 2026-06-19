@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { verifyToken, normalizeSessionDuration } from '@/app/lib/auth'
+import { normalizeSessionDuration } from '@/app/lib/auth'
+import { requireAdminPage } from '@/app/lib/admin-authz'
+import { normalizeAllowedPages } from '@/app/lib/admin-permissions'
 import { connectDB } from '@/app/lib/mongodb'
 import Admin from '@/app/models/Admin'
 
-const roles = ['owner', 'admin', 'manager']
 const assignmentScopes = ['full-control', 'assigned-control', 'handover-control']
 
 type AdminDocument = {
@@ -14,16 +15,12 @@ type AdminDocument = {
   role: string
   assignmentScope: string
   assignedTo?: string
+  allowedPages?: string[]
   sessionDuration?: string
   isActive: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-}
-
-function getSession(req: NextRequest) {
-  const token = req.cookies.get('admin_token')?.value
-  return token ? verifyToken(token) : null
 }
 
 function cleanUser(user: AdminDocument) {
@@ -34,6 +31,7 @@ function cleanUser(user: AdminDocument) {
     role: user.role,
     assignmentScope: user.assignmentScope,
     assignedTo: user.assignedTo || '',
+    allowedPages: normalizeAllowedPages(user.role, user.allowedPages),
     sessionDuration: user.sessionDuration || '1d',
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
@@ -43,26 +41,26 @@ function cleanUser(user: AdminDocument) {
 }
 
 function normalizeBody(body: Record<string, unknown>) {
-  const requestedRole = String(body.role || '')
+  const role = String(body.role || 'manager').trim().toLowerCase().replace(/\s+/g, '-')
   const requestedAssignmentScope = String(body.assignmentScope || '')
-  const role = roles.includes(requestedRole) ? requestedRole : 'manager'
   const assignmentScope = assignmentScopes.includes(requestedAssignmentScope) ? requestedAssignmentScope : 'assigned-control'
+  const allowedPages = normalizeAllowedPages(role, body.allowedPages)
 
   return {
     email: String(body.email || '').trim().toLowerCase(),
     name: String(body.name || '').trim() || 'Admin User',
-    role,
+    role: role || 'manager',
     assignmentScope,
     assignedTo: String(body.assignedTo || '').trim(),
+    allowedPages,
     sessionDuration: normalizeSessionDuration(body.sessionDuration),
     isActive: body.isActive === undefined ? true : Boolean(body.isActive),
   }
 }
 
 export async function GET(req: NextRequest) {
-  if (!getSession(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
 
   await connectDB()
   const users = await Admin.find({}).sort({ role: 1, name: 1 })
@@ -70,9 +68,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!getSession(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
 
   const body = await req.json()
   const nextUser = normalizeBody(body)
@@ -97,7 +94,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = getSession(req)
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
+  const session = guard.session
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -128,6 +127,7 @@ export async function PUT(req: NextRequest) {
     update.role = 'owner'
     update.assignmentScope = 'full-control'
     update.assignedTo = ''
+    update.allowedPages = normalizeAllowedPages('owner', [])
 
     if (session.id && session.id !== id) {
       await Admin.findByIdAndUpdate(session.id, {
@@ -149,7 +149,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = getSession(req)
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
+  const session = guard.session
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

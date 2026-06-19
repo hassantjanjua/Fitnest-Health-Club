@@ -17,6 +17,7 @@ export default function Contact() {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
   const ref = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -36,20 +37,38 @@ export default function Contact() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name || !email) return
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setError('Please fill your name, email, and message.')
+      return
+    }
+
     setSending(true)
+    setError('')
 
-    await new Promise((r) => setTimeout(r, 1500))
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email, message }),
+      })
 
-    setSending(false)
-    setSent(true)
+      const data = await res.json()
 
-    setName('')
-    setPhone('')
-    setEmail('')
-    setMessage('')
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to send message right now.')
+      }
 
-    setTimeout(() => setSent(false), 4000)
+      setSent(true)
+      setName('')
+      setPhone('')
+      setEmail('')
+      setMessage('')
+      setTimeout(() => setSent(false), 4000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to send message right now.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -162,7 +181,21 @@ export default function Contact() {
               <FormInput placeholder="Full Name *" value={name} onChange={setName} />
               <FormInput placeholder="Phone Number" value={phone} onChange={setPhone} style={{ marginTop: 12 }} />
               <FormInput placeholder="Email Address *" value={email} onChange={setEmail} type="email" style={{ marginTop: 12 }} />
-              <FormTextarea placeholder="Your Message" value={message} onChange={setMessage} style={{ marginTop: 12 }} />
+              <FormTextarea placeholder="Your Message *" value={message} onChange={setMessage} style={{ marginTop: 12 }} />
+
+              {error && (
+                <div style={{
+                  marginTop: 14,
+                  padding: '10px 12px',
+                  border: '1px solid rgba(239,68,68,0.28)',
+                  background: 'rgba(239,68,68,0.08)',
+                  color: '#fca5a5',
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}>
+                  {error}
+                </div>
+              )}
 
               <button
                 type="submit"

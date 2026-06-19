@@ -18,6 +18,7 @@ export type AdminTokenPayload = JwtPayload & {
   role?: string
   assignmentScope?: string
   assignedTo?: string
+  allowedPages?: string[]
   sessionDuration?: SessionDuration
 }
 

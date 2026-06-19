@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionMaxAge, normalizeSessionDuration, verifyOTP, signToken } from '@/app/lib/auth'
+import { normalizeAllowedPages } from '@/app/lib/admin-permissions'
 import { connectDB } from '@/app/lib/mongodb'
 import Admin from '@/app/models/Admin'
 
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionDuration = normalizeSessionDuration(admin.sessionDuration)
+    const allowedPages = normalizeAllowedPages(admin.role, admin.allowedPages)
     const token = signToken({
       id: admin._id.toString(),
       email: normalizedEmail,
@@ -32,6 +34,7 @@ export async function POST(req: NextRequest) {
       role: admin.role,
       assignmentScope: admin.assignmentScope,
       assignedTo: admin.assignedTo,
+      allowedPages,
       sessionDuration,
     }, sessionDuration)
 

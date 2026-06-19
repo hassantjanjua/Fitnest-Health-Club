@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/app/lib/mongodb'
-import { sendContactNotificationEmail } from '@/app/lib/email'
+import { sendContactConfirmationEmail, sendContactNotificationEmail } from '@/app/lib/email'
 import ContactMessage from '@/app/models/ContactMessage'
 
 export async function POST(req: NextRequest) {
@@ -18,11 +18,16 @@ export async function POST(req: NextRequest) {
     await connectDB()
     const contactMessage = await ContactMessage.create({ name, email, phone, message })
 
-    try {
-      await sendContactNotificationEmail({ name, email, phone, message })
-    } catch (error) {
-      console.error('Contact notification failed:', error)
-    }
+    const emailResults = await Promise.allSettled([
+      sendContactNotificationEmail({ name, email, phone, message }),
+      sendContactConfirmationEmail({ name, email, phone, message }),
+    ])
+
+    emailResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(index === 0 ? 'Contact notification failed:' : 'Contact confirmation failed:', result.reason)
+      }
+    })
 
     return NextResponse.json({ message: contactMessage }, { status: 201 })
   } catch (error) {

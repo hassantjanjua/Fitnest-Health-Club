@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ADMIN_PAGES, type AdminPageKey, normalizeAllowedPages } from '@/app/lib/admin-permissions'
 
 const emptyForm = {
   id: '',
@@ -10,6 +11,7 @@ const emptyForm = {
   role: 'manager',
   assignmentScope: 'assigned-control',
   assignedTo: '',
+  allowedPages: ['overview', 'messages', 'customers'] as AdminPageKey[],
   sessionDuration: '1d',
   isActive: true,
 }
@@ -18,12 +20,8 @@ const roles = [
   { value: 'owner', label: 'Owner' },
   { value: 'admin', label: 'Admin' },
   { value: 'manager', label: 'Manager' },
-]
-
-const assignmentScopes = [
-  { value: 'full-control', label: 'Full control' },
-  { value: 'assigned-control', label: 'Assigned control' },
-  { value: 'handover-control', label: 'Handover control' },
+  { value: 'front-desk', label: 'Front Desk' },
+  { value: 'content-manager', label: 'Content Manager' },
 ]
 
 const sessionDurations = [
@@ -35,6 +33,8 @@ const sessionDurations = [
 type AdminUser = typeof emptyForm & {
   _id: string
   lastLoginAt?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export default function SettingsPage() {
@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState(emptyForm)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -79,10 +80,25 @@ export default function SettingsPage() {
       role: user.role,
       assignmentScope: user.assignmentScope,
       assignedTo: user.assignedTo || '',
+      allowedPages: normalizeAllowedPages(user.role, user.allowedPages),
       sessionDuration: user.sessionDuration || '1d',
       isActive: user.isActive,
     })
+    setShowForm(true)
     setMessage('')
+    setError('')
+  }
+
+  function startNewUser() {
+    setForm(emptyForm)
+    setShowForm(true)
+    setMessage('')
+    setError('')
+  }
+
+  function closeForm() {
+    setForm(emptyForm)
+    setShowForm(false)
     setError('')
   }
 
@@ -105,6 +121,7 @@ export default function SettingsPage() {
       }
 
       setForm(emptyForm)
+      setShowForm(false)
       setMessage(handoverControl ? 'Control handed over' : 'User saved')
       await loadUsers()
     } catch {
@@ -159,6 +176,29 @@ export default function SettingsPage() {
     marginBottom: 7,
   }
 
+  function setRole(role: string) {
+    setForm(prev => ({
+      ...prev,
+      role,
+      allowedPages: normalizeAllowedPages(role, prev.allowedPages),
+      assignmentScope: role === 'owner' ? 'full-control' : 'assigned-control',
+      assignedTo: '',
+    }))
+  }
+
+  function togglePage(page: AdminPageKey) {
+    setForm(prev => {
+      if (prev.role === 'owner') return prev
+
+      const exists = prev.allowedPages.includes(page)
+      const next = exists
+        ? prev.allowedPages.filter(item => item !== page)
+        : [...prev.allowedPages, page]
+
+      return { ...prev, allowedPages: normalizeAllowedPages(prev.role, next) }
+    })
+  }
+
   if (loading) {
     return <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>Loading users...</div>
   }
@@ -168,10 +208,10 @@ export default function SettingsPage() {
       <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, gap: 16 }}>
         <div>
           <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 36, color: '#fff', letterSpacing: '0.05em', margin: 0 }}>User Access</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>Create users, assign control, hand over ownership, and configure automatic logout timing</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>Create users, assign roles, choose page access, and configure automatic logout timing</p>
         </div>
         <button
-          onClick={() => setForm(emptyForm)}
+          onClick={startNewUser}
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px 18px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4 }}
         >
           New User
@@ -184,7 +224,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="admin-settings-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 420px)', gap: 24 }}>
+      <div className="admin-settings-grid" style={{ display: 'grid', gridTemplateColumns: showForm ? 'minmax(0, 1fr) minmax(320px, 420px)' : 'minmax(0, 1fr)', gap: 24 }}>
         <div style={{ display: 'grid', gap: 12 }}>
           {users.map(user => (
             <div className="admin-user-row" key={user._id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 18, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 16, alignItems: 'center' }}>
@@ -195,13 +235,19 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, marginBottom: 10 }}>{user.email}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {[user.role, user.assignmentScope, sessionDurations.find(item => item.value === user.sessionDuration)?.label || '1 day'].map(item => (
+                  {[user.role, sessionDurations.find(item => item.value === user.sessionDuration)?.label || '1 day'].map(item => (
                     <span key={item} style={{ background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.18)', color: 'rgba(255,255,255,0.72)', borderRadius: 4, padding: '5px 8px', fontSize: 11, textTransform: 'capitalize' }}>
                       {String(item).replaceAll('-', ' ')}
                     </span>
                   ))}
                 </div>
-                {user.assignedTo && <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 10 }}>Assigned: {user.assignedTo}</div>}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {normalizeAllowedPages(user.role, user.allowedPages).map(page => (
+                    <span key={page} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', borderRadius: 4, padding: '4px 7px', fontSize: 10 }}>
+                      {ADMIN_PAGES.find(item => item.key === page)?.label || page}
+                    </span>
+                  ))}
+                </div>
               </div>
               <div className="admin-row-actions" style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => editUser(user)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '9px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Edit</button>
@@ -211,6 +257,7 @@ export default function SettingsPage() {
           ))}
         </div>
 
+        {showForm && (
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 24, alignSelf: 'start' }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-orange)', marginBottom: 18 }}>{form.id ? 'Update User' : 'Create User'}</div>
           <div style={{ display: 'grid', gap: 15 }}>
@@ -229,8 +276,9 @@ export default function SettingsPage() {
             <div className="admin-form-pair" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Role</label>
-                <select value={form.role} onChange={e => setForm(prev => ({ ...prev, role: e.target.value }))} style={inputStyle}>
+                <select value={roles.some(item => item.value === form.role) ? form.role : 'custom'} onChange={e => setRole(e.target.value === 'custom' ? '' : e.target.value)} style={inputStyle}>
                   {roles.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+                  <option value="custom">Custom role</option>
                 </select>
               </div>
               <div>
@@ -240,15 +288,37 @@ export default function SettingsPage() {
                 </select>
               </div>
             </div>
+            {!roles.some(item => item.value === form.role) && (
+              <div>
+                <label style={labelStyle}>Custom Role Name</label>
+                <input value={form.role} placeholder="sales-lead" onChange={e => setRole(e.target.value)} style={inputStyle} />
+              </div>
+            )}
             <div>
-              <label style={labelStyle}>Assignment</label>
-              <select value={form.assignmentScope} onChange={e => setForm(prev => ({ ...prev, assignmentScope: e.target.value }))} style={inputStyle}>
-                {assignmentScopes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Assigned To / Notes</label>
-              <textarea value={form.assignedTo} rows={3} onChange={e => setForm(prev => ({ ...prev, assignedTo: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
+              <label style={labelStyle}>Page Access</label>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {ADMIN_PAGES.map(page => {
+                  const checked = form.role === 'owner' || form.allowedPages.includes(page.key)
+
+                  return (
+                    <label key={page.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: checked ? 'rgba(255,107,0,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${checked ? 'rgba(255,107,0,0.22)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 4, padding: '10px 12px', cursor: form.role === 'owner' ? 'not-allowed' : 'pointer' }}>
+                      <span style={{ color: '#fff', fontSize: 13 }}>{page.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={form.role === 'owner'}
+                        onChange={() => togglePage(page.key)}
+                        style={{ width: 16, height: 16, accentColor: 'var(--accent-orange)' }}
+                      />
+                    </label>
+                  )
+                })}
+              </div>
+              {form.role === 'owner' && (
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 8 }}>
+                  Owners always have access to every dashboard page.
+                </div>
+              )}
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.65)', fontSize: 13, cursor: 'pointer' }}>
               <input type="checkbox" checked={form.isActive} onChange={e => setForm(prev => ({ ...prev, isActive: e.target.checked }))} style={{ width: 16, height: 16, accentColor: 'var(--accent-orange)' }} />
@@ -257,13 +327,12 @@ export default function SettingsPage() {
             <button onClick={() => saveUser(false)} disabled={saving} style={{ background: saving ? 'rgba(255,107,0,0.45)' : 'var(--accent-orange)', border: 'none', color: '#fff', padding: '12px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', borderRadius: 4 }}>
               {saving ? 'Saving...' : 'Save User'}
             </button>
-            {form.id && (
-              <button onClick={() => saveUser(true)} disabled={saving} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', borderRadius: 4 }}>
-                Handover Control
-              </button>
-            )}
+            <button onClick={closeForm} disabled={saving} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '12px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer', borderRadius: 4 }}>
+              Cancel
+            </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   )

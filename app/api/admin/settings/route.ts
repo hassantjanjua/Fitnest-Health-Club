@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/app/lib/auth'
+import { requireAdminPage } from '@/app/lib/admin-authz'
 import { connectDB } from '@/app/lib/mongodb'
 import SiteSettings from '@/app/models/SiteSettings'
-
-function checkAuth(req: NextRequest) {
-  const token = req.cookies.get('admin_token')?.value
-  if (!token) return false
-  return verifyToken(token)
-}
 
 async function getSettings() {
   await connectDB()
@@ -20,18 +14,16 @@ async function getSettings() {
 }
 
 export async function GET(req: NextRequest) {
-  if (!checkAuth(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
 
   const settings = await getSettings()
   return NextResponse.json({ settings })
 }
 
 export async function PUT(req: NextRequest) {
-  if (!checkAuth(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const guard = requireAdminPage(req, 'settings')
+  if (guard.response) return guard.response
 
   await connectDB()
   const body = await req.json()
