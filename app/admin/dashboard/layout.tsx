@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import FitnestLogo from '@/app/components/FitnestLogo'
-import type { AdminPageKey } from '@/app/lib/admin-permissions'
+import { pageKeyFromPath, type AdminPageKey } from '@/app/lib/admin-permissions'
 
 const navItems: Array<{ key: AdminPageKey; label: string; href: string; icon: string }> = [
   { key: 'overview', label: 'Overview', href: '/admin/dashboard', icon: '□' },
@@ -45,14 +45,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         const data = await res.json()
-        setSession(data.session)
+        const nextSession = data.session as AdminSession & { expiresAt?: number | null }
+        setSession(nextSession)
 
-        const expiresAt = Number(data.session?.expiresAt || 0)
+        const currentPage = pageKeyFromPath(pathname)
+        const canSeeCurrentPage =
+          !currentPage ||
+          nextSession.role === 'owner' ||
+          nextSession.allowedPages?.includes(currentPage)
+
+        if (!canSeeCurrentPage) {
+          const fallback = navItems.find(item =>
+            nextSession.role === 'owner' || nextSession.allowedPages?.includes(item.key)
+          )
+          router.push(fallback?.href || '/admin/login')
+          return
+        }
+
+        const expiresAt = Number(nextSession.expiresAt || 0)
         const delay = expiresAt - Date.now()
         if (delay <= 0) {
           await handleLogout()
           return
         }
+        if (logoutTimer) clearTimeout(logoutTimer)
         logoutTimer = setTimeout(handleLogout, delay)
       } catch {
         router.push('/admin/login')
@@ -60,8 +76,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     syncSessionExpiry()
-    return () => { if (logoutTimer) clearTimeout(logoutTimer) }
-  }, [handleLogout, router])
+    const refreshInterval = setInterval(syncSessionExpiry, 5000)
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer)
+      clearInterval(refreshInterval)
+    }
+  }, [handleLogout, pathname, router])
 
   useEffect(() => {
     async function loadNotReplied() {
@@ -89,7 +109,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const visibleNavItems = navItems.filter(item =>
     session?.role === 'owner' || session?.allowedPages?.includes(item.key)
   )
-  const renderedNavItems = visibleNavItems.length ? visibleNavItems : navItems
+  const renderedNavItems = session ? visibleNavItems : []
   const currentTitle = navItems.find(n => n.href === pathname)?.label || 'Dashboard'
 
   return (

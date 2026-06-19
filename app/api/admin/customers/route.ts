@@ -4,7 +4,7 @@ import { connectDB } from '@/app/lib/mongodb'
 import Customer from '@/app/models/Customer'
 
 export async function GET(req: NextRequest) {
-  const guard = requireAdminPage(req, 'customers')
+  const guard = await requireAdminPage(req, 'customers')
   if (guard.response) return guard.response
   await connectDB()
   const customers = await Customer.find({}).sort({ createdAt: -1 })
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = requireAdminPage(req, 'customers')
+  const guard = await requireAdminPage(req, 'customers')
   if (guard.response) return guard.response
   await connectDB()
   const body = await req.json()
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const guard = requireAdminPage(req, 'customers')
+  const guard = await requireAdminPage(req, 'customers')
   if (guard.response) return guard.response
   await connectDB()
   const { id, ...data } = await req.json()
@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = requireAdminPage(req, 'customers')
+  const guard = await requireAdminPage(req, 'customers')
   if (guard.response) return guard.response
   await connectDB()
   const { id } = await req.json()

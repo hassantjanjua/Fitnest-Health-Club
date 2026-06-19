@@ -6,7 +6,7 @@ import { sendContactReplyEmail } from '@/app/lib/email'
 
 // GET all messages
 export async function GET(req: NextRequest) {
-  const guard = requireAdminPage(req, 'messages')
+  const guard = await requireAdminPage(req, 'messages')
   if (guard.response) return guard.response
   await connectDB()
   const messages = await ContactMessage.find({}).sort({ createdAt: -1 })
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
 // PUT — mark status or send reply
 export async function PUT(req: NextRequest) {
-  const guard = requireAdminPage(req, 'messages')
+  const guard = await requireAdminPage(req, 'messages')
   if (guard.response) return guard.response
   await connectDB()
   const { id, status, reply } = await req.json()
@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest) {
 
 // DELETE message
 export async function DELETE(req: NextRequest) {
-  const guard = requireAdminPage(req, 'messages')
+  const guard = await requireAdminPage(req, 'messages')
   if (guard.response) return guard.response
   await connectDB()
   const { id } = await req.json()

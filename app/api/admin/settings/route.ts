@@ -14,7 +14,7 @@ async function getSettings() {
 }
 
 export async function GET(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
 
   const settings = await getSettings()
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
 
   await connectDB()

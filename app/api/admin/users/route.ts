@@ -59,7 +59,7 @@ function normalizeBody(body: Record<string, unknown>) {
 }
 
 export async function GET(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
 
   await connectDB()
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
 
   const body = await req.json()
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
   const session = guard.session
   if (!session) {
@@ -149,7 +149,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = requireAdminPage(req, 'settings')
+  const guard = await requireAdminPage(req, 'settings')
   if (guard.response) return guard.response
   const session = guard.session
   if (!session) {
