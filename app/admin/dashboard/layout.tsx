@@ -13,7 +13,10 @@ const navItems: Array<{ key: AdminPageKey; label: string; href: string; icon: st
   { key: 'pricing', label: 'Pricing Plans', href: '/admin/dashboard/pricing', icon: '◆' },
   { key: 'trainers', label: 'Trainers', href: '/admin/dashboard/trainers', icon: '●' },
   { key: 'gallery', label: 'Gallery', href: '/admin/dashboard/gallery', icon: '▧' },
+  { key: 'events',   label: 'Events', href: '/admin/dashboard/Events',   icon: '◈' },
+  { key: 'schedule', label: 'Schedule', href: '/admin/dashboard/Schedule',  icon: '◷' },
   { key: 'settings', label: 'User Access', href: '/admin/dashboard/settings', icon: '○' },
+ 
 ]
 
 type AdminSession = {

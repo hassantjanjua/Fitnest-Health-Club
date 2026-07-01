@@ -49,11 +49,17 @@ export default function About() {
         background: 'radial-gradient(circle, rgba(255,107,0,0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
+      <div style={{
+        position: 'absolute', bottom: '-15%', left: '-10%',
+        width: 500, height: 500, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255,107,0,0.04) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="about-container">
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="hero-container">
 
         {/* Top: label + heading + intro */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'end', marginBottom: 'clamp(48px, 6vw, 80px)' }} className="about-top">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'end', marginBottom: 'clamp(48px, 6vw, 80px)' }} className="hero-bottom-grid">
           <div>
             <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 40, height: 2, background: 'var(--accent-orange)' }} />
@@ -99,7 +105,7 @@ export default function About() {
         </div>
 
         {/* Timeline + stats split */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }} className="about-bottom">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }} className="hero-bottom-grid">
           {/* Timeline */}
           <div style={fade(0.2)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
@@ -120,6 +126,15 @@ export default function About() {
             <StatsCard visible={visible} />
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 1024px) {
+            .values-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 640px) {
+            .values-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </div>
     </section>
   )
@@ -127,10 +142,17 @@ export default function About() {
 
 function StoryButton() {
   const [hovered, setHovered] = useState(false)
+
+  const scrollToContact = () => {
+    const el = document.getElementById('contact')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <button
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={scrollToContact}
       style={{
         display: 'flex', alignItems: 'center',
         gap: hovered ? 14 : 8,
@@ -175,8 +197,8 @@ function ValueCard({ value, index, fadeStyle }: {
     >
       <div style={{
         width: 52, height: 52, marginBottom: 20,
-        background: hovered ? 'rgba(255,107,0,0.15)' : 'rgba(255,107,0,0.1)',
-        border: `1px solid ${hovered ? 'rgba(255,107,0,0.4)' : 'rgba(255,107,0,0.2)'}`,
+        background: hovered ? 'rgba(255,107,0,0.15)' : 'rgba(255,107,0,0.08)',
+        border: `1px solid ${hovered ? 'rgba(255,107,0,0.4)' : 'rgba(255,107,0,0.18)'}`,
         clipPath: 'polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
@@ -229,7 +251,7 @@ function MilestoneItem({ milestone, isLast }: {
         width: 40, height: 40, flexShrink: 0,
         border: '2px solid var(--accent-orange)',
         borderRadius: '50%',
-        background: hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,107,0,0.1)',
+        background: hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,107,0,0.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', zIndex: 1,
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
@@ -334,12 +356,11 @@ function StatBar({ item, index, isLast, visible }: {
       <div style={{
         height: 4,
         background: 'rgba(255,255,255,0.06)',
-        borderRadius: 2,
         overflow: 'hidden',
+        clipPath: 'polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px))',
       }}>
         <div style={{
           height: '100%',
-          borderRadius: 2,
           background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)',
           width: visible ? `${item.value}%` : '0%',
           transition: `width 1.2s cubic-bezier(0.16,1,0.3,1) ${animDelay}s`,

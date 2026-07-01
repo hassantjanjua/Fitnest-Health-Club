@@ -2,30 +2,54 @@
 
 import { useEffect, useState } from 'react'
 
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const times = [
+  '6:00 AM',
+  '7:00 AM',
+  '8:00 AM',
+  '9:00 AM',
+  '10:00 AM',
+  '11:00 AM',
+  '5:00 PM',
+  '6:00 PM',
+  '7:00 PM',
+  '8:00 PM',
+]
+const categories = ['Cardio', 'Strength', 'Yoga', 'CrossFit', 'Cycling', 'HIIT', 'Boxing', 'Pilates']
+
 const emptyForm = {
-  name: '',
-  role: '',
-  speciality: '',
-  experience: '',
-  certifications: '',
-  initials: '',
-  color: '#FF6B00',
-  instagram: '',
+  day: 'Monday',
+  time: '6:00 AM',
+  className: '',
+  trainer: '',
+  category: 'Cardio',
   isActive: true,
 }
 
-export default function TrainersPage() {
-  const [trainers, setTrainers] = useState<any[]>([])
+const catColor: Record<string, string> = {
+  Cardio: '#ef4444',
+  Strength: '#FF6B00',
+  Yoga: '#a855f7',
+  CrossFit: '#3b82f6',
+  Cycling: '#22c55e',
+  HIIT: '#eab308',
+  Boxing: '#f97316',
+  Pilates: '#ec4899',
+}
+
+export default function ScheduleAdminPage() {
+  const [schedule, setSchedule] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState(emptyForm)
-  const [loading, setLoading] = useState(true)
+  const [activeDay, setActiveDay] = useState('Monday')
 
   async function load() {
     setLoading(true)
-    const res = await fetch('/api/admin/trainers')
+    const res = await fetch('/api/admin/schedule')
     const data = await res.json()
-    setTrainers(data.trainers || [])
+    setSchedule(data.schedule || [])
     setLoading(false)
   }
 
@@ -35,35 +59,32 @@ export default function TrainersPage() {
 
   function openAdd() {
     setEditing(null)
-    setForm(emptyForm)
+    setForm({ ...emptyForm, day: activeDay })
     setShowModal(true)
   }
 
-  function openEdit(t: any) {
-    setEditing(t)
+  function openEdit(cls: any) {
+    setEditing(cls)
     setForm({
-      name: t.name,
-      role: t.role,
-      speciality: t.speciality,
-      experience: t.experience,
-      certifications: t.certifications,
-      initials: t.initials,
-      color: t.color,
-      instagram: t.instagram || '',
-      isActive: t.isActive,
+      day: cls.day,
+      time: cls.time,
+      className: cls.className,
+      trainer: cls.trainer,
+      category: cls.category,
+      isActive: cls.isActive,
     })
     setShowModal(true)
   }
 
   async function handleSave() {
     if (editing) {
-      await fetch('/api/admin/trainers', {
+      await fetch('/api/admin/schedule', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: editing._id, ...form }),
       })
     } else {
-      await fetch('/api/admin/trainers', {
+      await fetch('/api/admin/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -74,8 +95,8 @@ export default function TrainersPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this trainer?')) return
-    await fetch('/api/admin/trainers', {
+    if (!confirm('Delete this class?')) return
+    await fetch('/api/admin/schedule', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -83,19 +104,16 @@ export default function TrainersPage() {
     load()
   }
 
-  const activeCount = trainers.filter((t) => t.isActive).length
-  const inactiveCount = trainers.filter((t) => !t.isActive).length
+  const filteredByDay = schedule.filter((s) => s.day === activeDay)
+  const activeCount = schedule.filter((s) => s.isActive).length
+  const hiddenCount = schedule.filter((s) => !s.isActive).length
+  const categoriesCount = new Set(schedule.map((s) => s.category).filter(Boolean)).size
 
   const stats = [
-    { label: 'Total Trainers', value: trainers.length, icon: '◉', color: '#FF6B00' },
-    { label: 'Active Trainers', value: activeCount, icon: '◎', color: '#22c55e' },
-    { label: 'Inactive', value: inactiveCount, icon: '◈', color: '#ef4444' },
-    {
-      label: 'Specialities',
-      value: new Set(trainers.map((t) => t.speciality).filter(Boolean)).size,
-      icon: '✦',
-      color: '#a855f7',
-    },
+    { label: 'Total Classes', value: schedule.length, icon: '◉', color: '#FF6B00' },
+    { label: 'Active', value: activeCount, icon: '◎', color: '#22c55e' },
+    { label: 'Hidden', value: hiddenCount, icon: '◈', color: '#ef4444' },
+    { label: 'Categories', value: categoriesCount, icon: '▤', color: '#a855f7' },
   ]
 
   return (
@@ -142,11 +160,11 @@ export default function TrainersPage() {
                 lineHeight: 1,
               }}
             >
-              Trainers
+              Class Schedule
             </h1>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 8 }}>
-              {trainers.length} trainer{trainers.length !== 1 ? 's' : ''} on team. Manage your
-              coaching staff here.
+              {schedule.length} class{schedule.length !== 1 ? 'es' : ''} total. Manage your weekly
+              fitness schedule.
             </p>
           </div>
           <button
@@ -175,7 +193,7 @@ export default function TrainersPage() {
               flexShrink: 0,
             }}
           >
-            + Add Trainer
+            + Add Class
           </button>
         </div>
       </div>
@@ -195,7 +213,77 @@ export default function TrainersPage() {
         ))}
       </div>
 
-      {/* Trainers Container */}
+      {/* Day Tabs */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          marginBottom: 20,
+          flexWrap: 'wrap',
+          padding: '4px',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          clipPath:
+            'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+        }}
+      >
+        {days.map((day) => {
+          const dayCount = schedule.filter((s) => s.day === day).length
+          const isActive = activeDay === day
+          return (
+            <button
+              key={day}
+              onClick={() => setActiveDay(day)}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
+                  e.currentTarget.style.color = 'var(--accent-orange)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
+                }
+              }}
+              style={{
+                padding: '10px 16px',
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                background: isActive ? 'var(--accent-orange)' : 'transparent',
+                border: 'none',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+                clipPath:
+                  'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              {day.slice(0, 3)}
+              {dayCount > 0 && (
+                <span
+                  style={{
+                    fontSize: 9,
+                    padding: '2px 6px',
+                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                    borderRadius: 3,
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  {dayCount}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Schedule Container */}
       <div
         style={{
           background: 'rgba(255,255,255,0.02)',
@@ -218,28 +306,26 @@ export default function TrainersPage() {
           }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>All Trainers</span>
-            {trainers.length > 0 && (
-              <div
-                style={{
-                  background: 'var(--accent-orange)',
-                  color: '#fff',
-                  minWidth: 22,
-                  height: 22,
-                  borderRadius: 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  padding: '0 6px',
-                  clipPath:
-                    'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
-                }}
-              >
-                {trainers.length}
-              </div>
-            )}
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{activeDay}</span>
+            <div
+              style={{
+                background: 'var(--accent-orange)',
+                color: '#fff',
+                minWidth: 22,
+                height: 22,
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 10,
+                fontWeight: 700,
+                padding: '0 6px',
+                clipPath:
+                  'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
+              }}
+            >
+              {filteredByDay.length}
+            </div>
           </div>
           <span
             style={{
@@ -250,7 +336,8 @@ export default function TrainersPage() {
               textTransform: 'uppercase',
             }}
           >
-            {activeCount} Active · {inactiveCount} Inactive
+            {filteredByDay.filter((c) => c.isActive).length} Active ·{' '}
+            {filteredByDay.filter((c) => !c.isActive).length} Hidden
           </span>
         </div>
 
@@ -263,9 +350,9 @@ export default function TrainersPage() {
               fontSize: 13,
             }}
           >
-            Loading trainers...
+            Loading schedule...
           </div>
-        ) : trainers.length === 0 ? (
+        ) : filteredByDay.length === 0 ? (
           <div
             style={{
               padding: 64,
@@ -275,36 +362,33 @@ export default function TrainersPage() {
             }}
           >
             <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.3 }}>◉</div>
-            <div style={{ marginBottom: 6 }}>No trainers yet</div>
+            <div style={{ marginBottom: 6 }}>No classes on {activeDay}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>
-              Click &quot;+ Add Trainer&quot; to add your first team member.
+              Click &quot;+ Add Class&quot; to schedule one.
             </div>
           </div>
         ) : (
-          <div
-            className="trainers-card-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 0,
-            }}
-          >
-            {trainers.map((t, i) => (
-              <TrainerCard
-                key={t._id}
-                trainer={t}
-                index={i}
-                onEdit={() => openEdit(t)}
-                onDelete={() => handleDelete(t._id)}
-              />
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {times.map((time, idx) => {
+              const cls = filteredByDay.find((s) => s.time === time)
+              if (!cls) return null
+              return (
+                <ClassCard
+                  key={cls._id}
+                  cls={cls}
+                  index={idx}
+                  onEdit={() => openEdit(cls)}
+                  onDelete={() => handleDelete(cls._id)}
+                />
+              )
+            })}
           </div>
         )}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <TrainerModal
+        <ScheduleModal
           editing={editing}
           form={form}
           setForm={setForm}
@@ -313,14 +397,13 @@ export default function TrainersPage() {
         />
       )}
 
-      {/* Responsive styles */}
+      {/* Responsive + Animation Styles */}
       <style>{`
         @media (max-width: 1024px) {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 640px) {
           .stats-grid { grid-template-columns: 1fr !important; }
-          .trainers-card-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
@@ -424,34 +507,42 @@ function StatCard({
   )
 }
 
-/* ─── Trainer Card ─── */
-function TrainerCard({
-  trainer: t,
+/* ─── Class Card ─── */
+function ClassCard({
+  cls,
   index,
   onEdit,
   onDelete,
 }: {
-  trainer: any
+  cls: any
   index: number
   onEdit: () => void
   onDelete: () => void
 }) {
   const [hovered, setHovered] = useState(false)
+  const color = catColor[cls.category] || '#FF6B00'
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="class-card"
       style={{
+        display: 'grid',
+        gridTemplateColumns: '90px 1fr auto',
+        gap: 20,
+        alignItems: 'center',
+        padding: '18px 24px',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
-        borderRight: '1px solid rgba(255,255,255,0.04)',
         background: hovered ? 'rgba(255,107,0,0.03)' : 'transparent',
         transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
         animation: `fadeIn 0.4s ease ${index * 0.05}s both`,
         position: 'relative',
         overflow: 'hidden',
+        opacity: cls.isActive ? 1 : 0.5,
       }}
     >
+      {/* Left accent bar */}
       <div
         style={{
           position: 'absolute',
@@ -459,217 +550,178 @@ function TrainerCard({
           left: 0,
           bottom: 0,
           width: 2,
-          background: t.color,
+          background: color,
           transform: hovered ? 'scaleY(1)' : 'scaleY(0)',
           transformOrigin: 'top',
           transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
         }}
       />
 
+      {/* Time */}
       <div
         style={{
-          height: 72,
-          background: `${t.color}08`,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 20px',
-          gap: 14,
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          fontSize: 11,
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.4)',
+          letterSpacing: '0.08em',
+          padding: '8px 12px',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          textAlign: 'center',
+          clipPath:
+            'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
         }}
       >
+        {cls.time}
+      </div>
+
+      {/* Info */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
         <div
           style={{
-            width: 44,
-            height: 44,
+            width: 12,
+            height: 12,
             borderRadius: '50%',
-            background: `${t.color}18`,
-            border: `2px solid ${t.color}40`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s ease',
-            transform: hovered ? 'scale(1.08)' : 'scale(1)',
             flexShrink: 0,
+            background: color,
+            boxShadow: `0 0 10px ${color}80`,
+            transition: 'all 0.3s ease',
+            transform: hovered ? 'scale(1.2)' : 'scale(1)',
           }}
-        >
-          <span
-            style={{
-              fontFamily: 'Bebas Neue, sans-serif',
-              fontSize: 18,
-              color: t.color,
-              lineHeight: 1,
-            }}
-          >
-            {t.initials}
-          </span>
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
+        />
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div
             style={{
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: 600,
               color: '#fff',
+              marginBottom: 3,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}
           >
-            {t.name}
+            {cls.className}
           </div>
-          <div
-            style={{
-              fontSize: 10,
-              color: 'var(--accent-orange)',
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 2,
-            }}
-          >
-            {t.role}
-          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>with {cls.trainer}</div>
         </div>
-
         <span
           style={{
             fontSize: 9,
             fontWeight: 700,
-            padding: '3px 10px',
-            background: t.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-            color: t.isActive ? '#22c55e' : '#ef4444',
-            border: `1px solid ${t.isActive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
-            letterSpacing: '0.1em',
+            padding: '4px 12px',
+            letterSpacing: '0.12em',
             textTransform: 'uppercase',
+            background: `${color}18`,
+            color: color,
+            border: `1px solid ${color}33`,
+            flexShrink: 0,
             clipPath:
               'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
-            flexShrink: 0,
           }}
         >
-          {t.isActive ? 'Active' : 'Inactive'}
+          {cls.category}
         </span>
-      </div>
-
-      <div style={{ padding: '14px 20px' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px 16px',
-            marginBottom: 14,
-          }}
-        >
-          <DetailItem label="Speciality" value={t.speciality} />
-          <DetailItem label="Experience" value={t.experience} />
-          <DetailItem label="Certifications" value={t.certifications} />
-          {t.instagram && <DetailItem label="Instagram" value={t.instagram} />}
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            paddingTop: 10,
-            borderTop: '1px solid rgba(255,255,255,0.04)',
-          }}
-        >
-          <button
-            onClick={onEdit}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
-              e.currentTarget.style.color = 'var(--accent-orange)'
-              e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-              e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-            }}
+        {!cls.isActive && (
+          <span
             style={{
-              flex: 1,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.6)',
-              padding: '9px',
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: 700,
+              padding: '4px 10px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              clipPath:
-                'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+              background: 'rgba(239,68,68,0.12)',
+              color: '#ef4444',
+              border: '1px solid rgba(239,68,68,0.25)',
+              flexShrink: 0,
             }}
           >
-            Edit
-          </button>
-          <button
-            onClick={onDelete}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.15)'
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'
-            }}
-            style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              color: 'rgba(239,68,68,0.7)',
-              padding: '9px 14px',
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              clipPath:
-                'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-            }}
-          >
-            ✕
-          </button>
-        </div>
+            Hidden
+          </span>
+        )}
       </div>
-    </div>
-  )
-}
 
-/* ─── Detail Item ─── */
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div
-        style={{
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.25)',
-          marginBottom: 2,
-        }}
-      >
-        {label}
+      {/* Actions */}
+      <div className="class-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button
+          onClick={onEdit}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
+            e.currentTarget.style.color = 'var(--accent-orange)'
+            e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+            e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+          }}
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.6)',
+            padding: '8px 14px',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            clipPath:
+              'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+          }}
+        >
+          Edit
+        </button>
+        <button
+          onClick={onDelete}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.15)'
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'
+          }}
+          style={{
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            color: 'rgba(239,68,68,0.7)',
+            padding: '8px 14px',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            clipPath:
+              'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+          }}
+        >
+          ✕
+        </button>
       </div>
-      <div
-        style={{
-          fontSize: 12,
-          color: 'rgba(255,255,255,0.55)',
-          lineHeight: 1.4,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {value || '—'}
-      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .class-card {
+            grid-template-columns: 70px 1fr !important;
+            gap: 12px !important;
+          }
+          .class-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 4px;
+          }
+        }
+      `}</style>
     </div>
   )
 }
 
 /* ─── Modal ─── */
-function TrainerModal({
+function ScheduleModal({
   editing,
   form,
   setForm,
@@ -682,16 +734,6 @@ function TrainerModal({
   onSave: () => void
   onClose: () => void
 }) {
-  const fields = [
-    { key: 'name', label: 'Full Name', placeholder: 'Ahmed Raza' },
-    { key: 'role', label: 'Role / Title', placeholder: 'Head Strength Coach' },
-    { key: 'speciality', label: 'Speciality', placeholder: 'Powerlifting & Hypertrophy' },
-    { key: 'experience', label: 'Experience', placeholder: '10 Years' },
-    { key: 'certifications', label: 'Certifications', placeholder: 'NASM-CPT, CSCS' },
-    { key: 'initials', label: 'Initials (2 letters)', placeholder: 'AR' },
-    { key: 'instagram', label: 'Instagram Handle', placeholder: '@ahmedraza' },
-  ]
-
   const inputStyle: React.CSSProperties = {
     width: '100%',
     background: 'rgba(255,255,255,0.04)',
@@ -743,6 +785,7 @@ function TrainerModal({
           style={{ height: 2, background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)' }}
         />
 
+        {/* Header */}
         <div
           style={{
             padding: '20px 28px',
@@ -768,7 +811,7 @@ function TrainerModal({
                   'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
               }}
             >
-              {editing ? '✎' : '+'}
+              {editing ? '✎' : '◉'}
             </div>
             <span
               style={{
@@ -778,7 +821,7 @@ function TrainerModal({
                 letterSpacing: '0.05em',
               }}
             >
-              {editing ? 'Edit Trainer' : 'Add Trainer'}
+              {editing ? 'Edit Class' : 'Add Class'}
             </span>
           </div>
           <button
@@ -810,6 +853,7 @@ function TrainerModal({
           </button>
         </div>
 
+        {/* Form */}
         <div
           style={{
             padding: '24px 28px',
@@ -818,37 +862,7 @@ function TrainerModal({
             gap: 16,
           }}
         >
-          {fields.map((f) => (
-            <div key={f.key}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.35)',
-                  marginBottom: 6,
-                }}
-              >
-                {f.label}
-              </label>
-              <input
-                type="text"
-                placeholder={f.placeholder}
-                value={(form as any)[f.key]}
-                onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                }}
-                style={inputStyle}
-              />
-            </div>
-          ))}
-
+          {/* Day & Time */}
           <div>
             <label
               style={{
@@ -861,55 +875,175 @@ function TrainerModal({
                 marginBottom: 6,
               }}
             >
-              Card Color
+              Day & Time
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                style={{
-                  width: 48,
-                  height: 40,
-                  background: 'none',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 0,
-                  cursor: 'pointer',
-                  padding: 2,
-                  clipPath:
-                    'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <select
+                value={form.day}
+                onChange={(e) => setForm((f) => ({ ...f, day: e.target.value }))}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
                 }}
-              />
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: `${form.color}30`,
-                  border: `2px solid ${form.color}60`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
                 }}
+                style={{ ...inputStyle, cursor: 'pointer' }}
               >
-                <span
-                  style={{
-                    fontFamily: 'Bebas Neue, sans-serif',
-                    fontSize: 11,
-                    color: form.color,
-                  }}
-                >
-                  {form.initials || '??'}
-                </span>
-              </div>
-              <span
-                style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
+                {days.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={form.time}
+                onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                }}
+                style={{ ...inputStyle, cursor: 'pointer' }}
               >
-                {form.color}
-              </span>
+                {times.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
+          {/* Class Name */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Class Name
+            </label>
+            <input
+              type="text"
+              placeholder="Cardio Blast"
+              value={form.className}
+              onChange={(e) => setForm((f) => ({ ...f, className: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Trainer */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Trainer
+            </label>
+            <input
+              type="text"
+              placeholder="Ahmed R."
+              value={form.trainer}
+              onChange={(e) => setForm((f) => ({ ...f, trainer: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Category
+            </label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Category Preview */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 14px',
+              background: `${catColor[form.category] || '#FF6B00'}08`,
+              border: `1px solid ${catColor[form.category] || '#FF6B00'}20`,
+            }}
+          >
+            <div
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: catColor[form.category] || '#FF6B00',
+                boxShadow: `0 0 8px ${catColor[form.category] || '#FF6B00'}60`,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                color: catColor[form.category] || '#FF6B00',
+                fontWeight: 600,
+              }}
+            >
+              {form.category}
+            </span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 'auto' }}>
+              Preview
+            </span>
+          </div>
+
+          {/* Active toggle */}
           <div
             style={{
               display: 'flex',
@@ -936,7 +1070,7 @@ function TrainerModal({
                 fontWeight: 500,
               }}
             >
-              Active Trainer
+              Show on website
             </label>
             <span
               style={{
@@ -953,10 +1087,11 @@ function TrainerModal({
                 textTransform: 'uppercase',
               }}
             >
-              {form.isActive ? 'Active' : 'Inactive'}
+              {form.isActive ? 'Active' : 'Hidden'}
             </span>
           </div>
 
+          {/* Actions */}
           <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
             <button
               onClick={onSave}
@@ -984,7 +1119,7 @@ function TrainerModal({
                 transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
               }}
             >
-              {editing ? 'Save Changes' : 'Add Trainer'}
+              {editing ? 'Save Changes' : 'Add Class'}
             </button>
             <button
               onClick={onClose}

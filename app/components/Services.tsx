@@ -175,10 +175,10 @@ interface ServiceModalProps {
   service: typeof services[0] | null;
   isOpen: boolean;
   onClose: () => void;
-  onNavigatePricing: () => void;
+  onNavigateContact: () => void;
 }
 
-function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceModalProps) {
+function ServiceModal({ service, isOpen, onClose, onNavigateContact }: ServiceModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -206,12 +206,9 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
     <div 
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(10px)',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.9)',
+        backdropFilter: 'blur(12px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -225,17 +222,17 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
     >
       <div 
         ref={modalRef}
-        className="modal-content"
         style={{
-          background: 'linear-gradient(180deg, #0d0d0d 0%, #080808 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '4px',
+          background: 'linear-gradient(180deg, #101010 0%, #080808 100%)',
+          border: '1px solid rgba(255, 107, 0, 0.25)',
           maxWidth: '900px',
           width: '100%',
           maxHeight: '90vh',
           overflow: 'auto',
           position: 'relative',
+          boxShadow: '0 40px 80px rgba(0,0,0,0.8), 0 0 40px rgba(255,107,0,0.1)',
           animation: 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))',
         }}
       >
         {/* Close button */}
@@ -247,7 +244,6 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             right: '20px',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '50%',
             width: '44px',
             height: '44px',
             display: 'flex',
@@ -256,10 +252,11 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             zIndex: 10,
+            clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 107, 0, 0.2)';
-            e.currentTarget.style.borderColor = 'rgba(255, 107, 0, 0.4)';
+            e.currentTarget.style.background = 'rgba(255, 107, 0, 0.25)';
+            e.currentTarget.style.borderColor = 'rgba(255, 107, 0, 0.5)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
@@ -273,14 +270,14 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
         <div style={{
           padding: 'clamp(30px, 5vw, 50px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, transparent 50%)',
+          background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, transparent 60%)',
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '24px', flexWrap: 'wrap' }}>
             <div style={{
               width: 80,
               height: 80,
               background: 'rgba(255, 107, 0, 0.12)',
-              border: '1px solid rgba(255, 107, 0, 0.25)',
+              border: '1px solid rgba(255, 107, 0, 0.3)',
               clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
               display: 'flex',
               alignItems: 'center',
@@ -321,6 +318,7 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
                   letterSpacing: '0.14em',
                   padding: '6px 14px',
                   textTransform: 'uppercase',
+                  clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
                 }}>
                   Most Popular
                 </span>
@@ -349,7 +347,7 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             <p style={{
               fontSize: 15,
               lineHeight: 1.8,
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: 'rgba(255, 255, 255, 0.65)',
             }}>
               {details.overview}
             </p>
@@ -369,9 +367,9 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             ].map((item) => (
               <div key={item.label} style={{
                 background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 padding: '20px',
-                borderRadius: '2px',
+                clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <item.icon size={16} color="var(--accent-orange)" />
@@ -424,8 +422,8 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
                   gap: 12,
                   padding: '14px 18px',
                   background: 'rgba(255, 107, 0, 0.04)',
-                  border: '1px solid rgba(255, 107, 0, 0.1)',
-                  borderRadius: '2px',
+                  border: '1px solid rgba(255, 107, 0, 0.12)',
+                  clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
                 }}>
                   <div style={{
                     width: 6,
@@ -436,7 +434,7 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
                   }} />
                   <span style={{
                     fontSize: 14,
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.75)',
                   }}>
                     {benefit}
                   </span>
@@ -448,10 +446,11 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
           {/* Testimonial */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 107, 0, 0.02) 100%)',
-            border: '1px solid rgba(255, 107, 0, 0.15)',
+            border: '1px solid rgba(255, 107, 0, 0.2)',
             padding: 'clamp(24px, 4vw, 36px)',
             marginBottom: 40,
             position: 'relative',
+            clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
           }}>
             <div style={{
               position: 'absolute',
@@ -467,7 +466,7 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             <p style={{
               fontSize: 16,
               fontStyle: 'italic',
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: 'rgba(255, 255, 255, 0.8)',
               lineHeight: 1.7,
               marginBottom: 16,
               position: 'relative',
@@ -494,7 +493,8 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
             gap: 20,
             padding: '30px',
             background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
           }}>
             <div>
               <p style={{
@@ -517,49 +517,48 @@ function ServiceModal({ service, isOpen, onClose, onNavigatePricing }: ServiceMo
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button
-                className="btn-primary"
-                onClick={onNavigatePricing}
-                style={{
-                  padding: '16px 32px',
-                  fontSize: 12,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
+              <ModalButton primary onClick={onNavigateContact}>
                 Start Now <ChevronRight size={14} />
-              </button>
-              <button
-                onClick={onNavigatePricing}
-                style={{
-                  padding: '16px 32px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--accent-orange)';
-                  e.currentTarget.style.color = 'var(--accent-orange)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.color = '#fff';
-                }}
-              >
+              </ModalButton>
+              <ModalButton onClick={onNavigateContact}>
                 Book Free Trial
-              </button>
+              </ModalButton>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function ModalButton({ children, primary = false, onClick }: { children: React.ReactNode; primary?: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '16px 32px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        cursor: 'pointer',
+        background: primary ? (hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)') : (hovered ? 'rgba(255,107,0,0.08)' : 'transparent'),
+        border: primary ? 'none' : `1px solid ${hovered ? 'var(--accent-orange)' : 'rgba(255, 255, 255, 0.2)'}`,
+        color: primary ? '#fff' : (hovered ? 'var(--accent-orange)' : '#fff'),
+        transition: 'all 0.3s ease',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered && primary ? '0 10px 30px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -615,21 +614,22 @@ export default function Services() {
   return (
     <>
       <section id="services" ref={ref} style={{
-        padding: 'clamp(60px, 10vw, 120px) 0',
+        padding: 'clamp(80px, 10vw, 130px) 0',
         background: 'linear-gradient(180deg, #080808 0%, #0d0d0d 100%)',
         position: 'relative', overflow: 'hidden',
       }}>
+        {/* Subtle background glow */}
         <div style={{
           position: 'absolute', top: '30%', left: '-15%',
           width: 700, height: 700, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,107,0,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,107,0,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
 
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="services-container">
 
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'end', marginBottom: 'clamp(40px, 6vw, 72px)' }} className="services-header">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'end', marginBottom: 'clamp(48px, 6vw, 76px)' }} className="hero-bottom-grid">
             <div>
               <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                 <div style={{ width: 40, height: 2, background: 'var(--accent-orange)' }} />
@@ -648,9 +648,9 @@ export default function Services() {
               </h2>
             </div>
             <div style={fade(0.26)}>
-              <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, margin: 0, marginBottom: 24 }}>
+              <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, margin: '0 0 24px' }}>
                 Every program at Fitnest is engineered by certified professionals.
-                Whether you&apos;re a first-timer or a seasoned athlete, we have a track for you.
+                Whether you&apos;re a first-timer or a seasoned athlete, we have a track tailored for you.
               </p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {['20+ Programs', 'All Levels', 'Certified Trainers'].map(tag => (
@@ -658,8 +658,9 @@ export default function Services() {
                     padding: '7px 16px', fontSize: 11, fontWeight: 700,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     border: '1px solid rgba(255,107,0,0.3)',
-                    color: 'var(--accent-orange)', borderRadius: 2,
+                    color: 'var(--accent-orange)',
                     background: 'rgba(255,107,0,0.06)',
+                    clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
                   }}>{tag}</span>
                 ))}
               </div>
@@ -670,7 +671,7 @@ export default function Services() {
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.08)',
           }} className="services-grid">
             {services.map((service, i) => (
               <ServiceCard
@@ -687,32 +688,65 @@ export default function Services() {
           </div>
 
           {/* Bottom CTA */}
-          <div style={{ ...fade(0.5), textAlign: 'center', marginTop: 'clamp(40px, 5vw, 64px)' }}>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>
-              Not sure which program is right for you?
+          <div style={{ ...fade(0.5), textAlign: 'center', marginTop: 'clamp(44px, 5vw, 68px)' }}>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', marginBottom: 24 }}>
+              Not sure which program is right for your goals?
             </p>
-            <button 
-              onClick={handleGetConsultation}
-              className="btn-primary" 
-              style={{
-                padding: '16px 44px', fontSize: 12,
-                display: 'inline-flex', alignItems: 'center', gap: 10,
-              }}
-            >
+            <CTAButton onClick={handleGetConsultation}>
               Get a Free Consultation <ChevronRight size={14} />
-            </button>
+            </CTAButton>
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 1024px) {
+            .services-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 640px) {
+            .services-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </section>
 
       <ServiceModal 
         service={selectedService} 
         isOpen={isModalOpen} 
         onClose={closeModal}
-        onNavigatePricing={navigateToContact}
+        onNavigateContact={navigateToContact}
       />
     </>
   )
+}
+
+function CTAButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '18px 44px',
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        background: hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
+        color: '#fff',
+        border: 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 12px 40px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+      }}
+    >
+      {children}
+    </button>
+  );
 }
 
 function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, fadeStyle }: {
@@ -730,8 +764,8 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
     <div
       style={{
         ...fadeStyle,
-        padding: 'clamp(24px, 3vw, 40px) clamp(20px, 2.5vw, 36px)',
-        background: isActive ? 'rgba(255,107,0,0.07)' : '#0a0a0a',
+        padding: 'clamp(28px, 3.5vw, 44px) clamp(24px, 3vw, 38px)',
+        background: isActive ? 'rgba(255,107,0,0.06)' : '#0a0a0a',
         borderRight: (index + 1) % 3 !== 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
         borderBottom: index < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
@@ -739,6 +773,7 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
       }}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
+      onClick={onLearnMore}
     >
       {/* Featured badge */}
       {service.featured && (
@@ -746,9 +781,8 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
           position: 'absolute', top: 16, right: 16,
           background: 'var(--accent-orange)', color: '#fff',
           fontSize: 9, fontWeight: 700, letterSpacing: '0.16em',
-          padding: '4px 10px', textTransform: 'uppercase',
+          padding: '5px 12px', textTransform: 'uppercase',
           clipPath: 'polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px))',
-          animation: 'pulseGlow 2s ease infinite',
         }}>
           Most Popular
         </div>
@@ -765,17 +799,17 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
 
       {/* Tag */}
       <div style={{
-        fontSize: 9, fontWeight: 700, letterSpacing: '0.22em',
-        textTransform: 'uppercase', color: 'rgba(255,107,0,0.7)', marginBottom: 16,
+        fontSize: 10, fontWeight: 700, letterSpacing: '0.22em',
+        textTransform: 'uppercase', color: 'rgba(255,107,0,0.85)', marginBottom: 18,
       }}>
         {service.tag}
       </div>
 
       {/* Icon */}
       <div style={{
-        width: 56, height: 56, marginBottom: 20,
-        background: isActive ? 'rgba(255,107,0,0.15)' : 'rgba(255,107,0,0.08)',
-        border: `1px solid ${isActive ? 'rgba(255,107,0,0.4)' : 'rgba(255,107,0,0.18)'}`,
+        width: 56, height: 56, marginBottom: 22,
+        background: isActive ? 'rgba(255,107,0,0.18)' : 'rgba(255,107,0,0.08)',
+        border: `1px solid ${isActive ? 'rgba(255,107,0,0.45)' : 'rgba(255,107,0,0.18)'}`,
         clipPath: 'polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
@@ -785,21 +819,21 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
       </div>
 
       <h3 style={{
-        fontFamily: 'Bebas Neue', fontSize: 'clamp(22px, 2vw, 28px)', color: '#fff',
-        letterSpacing: '0.05em', margin: '0 0 14px',
+        fontFamily: 'Bebas Neue', fontSize: 'clamp(24px, 2.2vw, 30px)', color: '#fff',
+        letterSpacing: '0.04em', margin: '0 0 14px',
       }}>
         {service.title}
       </h3>
 
       <p style={{
-        fontSize: 14, color: 'rgba(255,255,255,0.4)',
-        lineHeight: 1.75, marginBottom: 20,
+        fontSize: 14, color: 'rgba(255,255,255,0.45)',
+        lineHeight: 1.75, marginBottom: 22,
       }}>
         {service.desc}
       </p>
 
       {/* Features */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
         {service.features.map((f, fi) => (
           <div key={f} style={{
             display: 'flex', alignItems: 'center', gap: 10,
@@ -807,12 +841,12 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
             transition: `transform 0.35s cubic-bezier(0.16,1,0.3,1) ${fi * 0.05}s`,
           }}>
             <div style={{
-              width: 5, height: 5, borderRadius: '50%',
+              width: 6, height: 6, borderRadius: '50%',
               background: 'var(--accent-orange)', flexShrink: 0,
               transition: 'all 0.3s ease',
               transform: isActive ? 'scale(1.4)' : 'scale(1)',
             }} />
-            <span style={{ fontSize: 13, color: isActive ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s ease' }}>{f}</span>
+            <span style={{ fontSize: 13, color: isActive ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.5)', transition: 'color 0.3s ease' }}>{f}</span>
           </div>
         ))}
       </div>
@@ -825,7 +859,7 @@ function ServiceCard({ service, index, isActive, onHover, onLeave, onLearnMore, 
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           background: 'transparent', border: 'none',
-          color: isActive ? 'var(--accent-orange)' : 'rgba(255,255,255,0.3)',
+          color: isActive ? 'var(--accent-orange)' : 'rgba(255,255,255,0.35)',
           fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
           textTransform: 'uppercase', cursor: 'pointer', padding: 0,
           transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',

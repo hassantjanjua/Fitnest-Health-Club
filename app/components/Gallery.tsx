@@ -27,7 +27,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Strength',
     title: 'Iron Paradise',
     desc: 'Our premium weight room equipped with competition-grade equipment.',
-    span: 'tall' as const,
+    span: 'tall',
   },
   {
     src: 'https://images.pexels.com/photos/2261485/pexels-photo-2261485.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -35,7 +35,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'CrossFit',
     title: 'Group Power',
     desc: 'High-intensity group sessions that push limits together.',
-    span: 'wide' as const,
+    span: 'wide',
   },
   {
     src: 'https://images.pexels.com/photos/14524650/pexels-photo-14524650.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -43,7 +43,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Training',
     title: 'Focused Strength',
     desc: 'Dedicated training zones for every discipline.',
-    span: 'normal' as const,
+    span: 'normal',
   },
   {
     src: 'https://images.pexels.com/photos/32610333/pexels-photo-32610333.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -51,7 +51,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Facility',
     title: 'State of the Art',
     desc: 'World-class facility with top-tier equipment and ambiance.',
-    span: 'normal' as const,
+    span: 'normal',
   },
   {
     src: 'https://images.pexels.com/photos/5327551/pexels-photo-5327551.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -59,7 +59,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Performance',
     title: 'Raw Power',
     desc: 'Functional training that builds real-world strength.',
-    span: 'wide' as const,
+    span: 'wide',
   },
   {
     src: 'https://images.pexels.com/photos/4164759/pexels-photo-4164759.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -67,7 +67,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Training',
     title: 'Personal Focus',
     desc: 'Dedicated personal training with certified coaches.',
-    span: 'tall' as const,
+    span: 'tall',
   },
   {
     src: 'https://images.pexels.com/photos/27433192/pexels-photo-27433192.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -75,7 +75,7 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Community',
     title: 'Team Energy',
     desc: 'Community-driven workouts that fuel motivation.',
-    span: 'normal' as const,
+    span: 'normal',
   },
   {
     src: 'https://images.pexels.com/photos/1566414/pexels-photo-1566414.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
@@ -83,9 +83,33 @@ const fallbackGalleryItems: GalleryItem[] = [
     category: 'Strength',
     title: 'Break Barriers',
     desc: 'Empowering athletes to surpass their limits every day.',
-    span: 'normal' as const,
+    span: 'normal',
   },
 ]
+
+function normalizeGalleryItem(item: GalleryApiItem, index: number): GalleryItem | null {
+  if (!item.url) return null
+
+  const category = toTitleCase(item.category || 'general')
+  const caption = item.caption?.trim() || `${category} at Fitnest`
+  const spans: GalleryItem['span'][] = ['tall', 'wide', 'normal', 'normal', 'wide', 'tall']
+
+  return {
+    _id: item._id,
+    src: item.url,
+    alt: caption,
+    category,
+    title: caption,
+    desc: `${category} gallery image from Fitnest Health Club.`,
+    span: spans[index % spans.length],
+  }
+}
+
+function toTitleCase(value: string) {
+  return value
+    .replace(/[-_]/g, ' ')
+    .replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+}
 
 export default function Gallery() {
   const [visible, setVisible] = useState(false)
@@ -104,6 +128,7 @@ export default function Gallery() {
     return () => observer.disconnect()
   }, [])
 
+  // Fetch gallery from database
   useEffect(() => {
     let alive = true
 
@@ -166,10 +191,8 @@ export default function Gallery() {
   }, [lightbox, closeLightbox, navigateLightbox])
 
   const handleBookTour = () => {
-    const el = document.getElementById('pricing')
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    const el = document.getElementById('contact')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const fade = (delay: number): React.CSSProperties => ({
@@ -185,7 +208,7 @@ export default function Gallery() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Background decorative elements */}
+      {/* Background glows */}
       <div style={{
         position: 'absolute', top: '20%', right: '-10%',
         width: 800, height: 800, borderRadius: '50%',
@@ -199,10 +222,23 @@ export default function Gallery() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="gallery-container">
+      {/* Diagonal lines */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: '-50%',
+            right: `${i * 140 - 80}px`,
+            width: '1px', height: '200%',
+            background: 'rgba(255,107,0,0.035)',
+            transform: 'rotate(-20deg)',
+          }} />
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="hero-container">
 
         {/* Header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'end', marginBottom: 48 }} className="gallery-header">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'end', marginBottom: 48 }} className="hero-bottom-grid">
           <div>
             <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 40, height: 2, background: 'var(--accent-orange)' }} />
@@ -231,8 +267,9 @@ export default function Gallery() {
                   padding: '7px 16px', fontSize: 11, fontWeight: 700,
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   border: '1px solid rgba(255,107,0,0.3)',
-                  color: 'var(--accent-orange)', borderRadius: 2,
+                  color: 'var(--accent-orange)',
                   background: 'rgba(255,107,0,0.06)',
+                  clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
                 }}>{tag}</span>
               ))}
             </div>
@@ -240,7 +277,7 @@ export default function Gallery() {
         </div>
 
         {/* Filter Tabs */}
-        <div style={{ ...fade(0.3), display: 'flex', gap: 4, marginBottom: 40, flexWrap: 'wrap' }} className="gallery-filters">
+        <div style={{ ...fade(0.3), display: 'flex', gap: 4, marginBottom: 40, flexWrap: 'wrap' }}>
           {categories.map(cat => (
             <FilterButton key={cat} cat={cat} isActive={activeFilter === cat} onClick={() => setActiveFilter(cat)} />
           ))}
@@ -277,7 +314,12 @@ export default function Gallery() {
           marginTop: 40,
           background: 'rgba(255,255,255,0.04)',
           border: '1px solid rgba(255,255,255,0.06)',
+          position: 'relative', overflow: 'hidden',
         }} className="gallery-stats">
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+            background: 'linear-gradient(90deg, var(--accent-orange), #ff9500, var(--accent-orange))',
+          }} />
           {[
             { number: '50K+', label: 'Sq. Ft. Facility' },
             { number: '200+', label: 'Equipment Pieces' },
@@ -293,185 +335,62 @@ export default function Gallery() {
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>
             Want a tour of our facility?
           </p>
-          <button
-            className="btn-primary"
-            onClick={handleBookTour}
-            style={{
-              padding: '16px 44px',
-              fontSize: 12,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              cursor: 'pointer',
-            }}
-          >
-            Book a Free Tour <ArrowUpRight size={16} />
-          </button>
+          <GalleryCTA onClick={handleBookTour} />
         </div>
+
+        <style>{`
+          @media (max-width: 1024px) {
+            .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .gallery-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 640px) {
+            .gallery-grid { grid-template-columns: 1fr !important; }
+            .gallery-stats { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </div>
 
       {/* Lightbox */}
       {lightbox !== null && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.96)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'fadeIn 0.3s ease',
-          }}
-          onClick={closeLightbox}
-        >
-          {/* Close button */}
-          <button
-            className="lightbox-close"
-            onClick={closeLightbox}
-            style={{
-              position: 'absolute', top: 24, right: 24,
-              width: 48, height: 48,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: '#fff', cursor: 'pointer',
-              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
-              transition: 'all 0.3s ease',
-              zIndex: 10,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,107,0,0.3)'
-              e.currentTarget.style.borderColor = 'rgba(255,107,0,0.5)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
-            }}
-          >
-            <X size={20} />
-          </button>
-
-          {/* Prev button */}
-          <button
-            className="lightbox-nav lightbox-prev"
-            onClick={e => { e.stopPropagation(); navigateLightbox(-1) }}
-            style={{
-              position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)',
-              width: 52, height: 52,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: '#fff', cursor: 'pointer',
-              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
-              transition: 'all 0.3s ease',
-              zIndex: 10,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,107,0,0.2)'
-              e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
-            }}
-          >
-            <ChevronLeft size={24} />
-          </button>
-
-          {/* Next button */}
-          <button
-            className="lightbox-nav lightbox-next"
-            onClick={e => { e.stopPropagation(); navigateLightbox(1) }}
-            style={{
-              position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)',
-              width: 52, height: 52,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: '#fff', cursor: 'pointer',
-              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
-              transition: 'all 0.3s ease',
-              zIndex: 10,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,107,0,0.2)'
-              e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
-            }}
-          >
-            <ChevronRight size={24} />
-          </button>
-
-          {/* Image container */}
-          <div onClick={e => e.stopPropagation()} style={{
-            maxWidth: '85vw', maxHeight: '85vh', position: 'relative',
-            animation: 'fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1)',
-          }} className="lightbox-image">
-            <img
-              src={filteredItems[lightbox].src}
-              alt={filteredItems[lightbox].alt}
-              style={{
-                maxWidth: '85vw',
-                maxHeight: '75vh',
-                objectFit: 'contain',
-                border: '1px solid rgba(255,255,255,0.08)',
-                display: 'block',
-              }}
-            />
-            {/* Image info bar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 0', marginTop: 12,
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              flexWrap: 'wrap', gap: 12,
-            }} className="lightbox-info">
-              <div>
-                <h4 style={{
-                  fontFamily: 'Bebas Neue',
-                  fontSize: 24,
-                  color: '#fff',
-                  letterSpacing: '0.05em',
-                  margin: '0 0 4px',
-                }}>
-                  {filteredItems[lightbox].title}
-                </h4>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                  {filteredItems[lightbox].desc}
-                </p>
-              </div>
-              <span style={{
-                padding: '6px 14px',
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                background: 'rgba(255,107,0,0.15)',
-                border: '1px solid rgba(255,107,0,0.3)',
-                color: 'var(--accent-orange)',
-                clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-                flexShrink: 0,
-              }}>
-                {filteredItems[lightbox].category}
-              </span>
-            </div>
-            {/* Counter */}
-            <div style={{
-              position: 'absolute', top: 16, left: 16,
-              padding: '6px 14px',
-              background: 'rgba(0,0,0,0.7)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'rgba(255,255,255,0.6)',
-              backdropFilter: 'blur(8px)',
-              clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-            }}>
-              <span style={{ color: 'var(--accent-orange)' }}>{lightbox + 1}</span> / {filteredItems.length}
-            </div>
-          </div>
-        </div>
+        <Lightbox
+          items={filteredItems}
+          activeIndex={lightbox}
+          onClose={closeLightbox}
+          onNavigate={navigateLightbox}
+        />
       )}
     </section>
+  )
+}
+
+function GalleryCTA({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '16px 44px',
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        background: hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
+        color: '#fff',
+        border: 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 12px 40px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+      }}
+    >
+      Book a Free Tour <ArrowUpRight size={16} />
+    </button>
   )
 }
 
@@ -524,7 +443,7 @@ function GalleryCard({ item, index, isHovered, onHover, onLeave, onClick, visibl
         position: 'relative',
         overflow: 'hidden',
         cursor: 'pointer',
-        border: `1px solid ${isHovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,255,255,0.06)'}`,
+        border: `1px solid ${isHovered ? 'rgba(255,107,0,0.25)' : 'rgba(255,255,255,0.06)'}`,
         opacity: visible ? 1 : 0,
         transform: visible ? 'scale(1)' : 'scale(0.95)',
         transition: `opacity 0.6s ease ${0.1 + index * 0.06}s, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${0.1 + index * 0.06}s, border-color 0.3s ease`,
@@ -544,7 +463,7 @@ function GalleryCard({ item, index, isHovered, onHover, onLeave, onClick, visibl
           objectFit: 'cover',
           transition: 'transform 0.7s cubic-bezier(0.16,1,0.3,1), filter 0.5s ease',
           transform: isHovered ? 'scale(1.1)' : 'scale(1)',
-          filter: isHovered ? 'brightness(0.45)' : 'brightness(0.7)',
+          filter: isHovered ? 'brightness(0.4)' : 'brightness(0.65)',
         }}
       />
 
@@ -633,30 +552,6 @@ function GalleryCard({ item, index, isHovered, onHover, onLeave, onClick, visibl
   )
 }
 
-function normalizeGalleryItem(item: GalleryApiItem, index: number): GalleryItem | null {
-  if (!item.url) return null
-
-  const category = toTitleCase(item.category || 'general')
-  const caption = item.caption?.trim() || `${category} at Fitnest`
-  const spans: GalleryItem['span'][] = ['tall', 'wide', 'normal', 'normal', 'wide', 'tall']
-
-  return {
-    _id: item._id,
-    src: item.url,
-    alt: caption,
-    category,
-    title: caption,
-    desc: `${category} gallery image from Fitnest Health Club.`,
-    span: spans[index % spans.length],
-  }
-}
-
-function toTitleCase(value: string) {
-  return value
-    .replace(/[-_]/g, ' ')
-    .replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-}
-
 function GalleryStat({ stat, index }: { stat: { number: string; label: string }; index: number }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -694,5 +589,167 @@ function GalleryStat({ stat, index }: { stat: { number: string; label: string };
         {stat.label}
       </div>
     </div>
+  )
+}
+
+function Lightbox({ items, activeIndex, onClose, onNavigate }: {
+  items: GalleryItem[]
+  activeIndex: number
+  onClose: () => void
+  onNavigate: (dir: number) => void
+}) {
+  const item = items[activeIndex]
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.96)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        animation: 'fadeIn 0.3s ease',
+      }}
+      onClick={onClose}
+    >
+      {/* Close */}
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute', top: 24, right: 24,
+          width: 48, height: 48,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          color: '#fff', cursor: 'pointer',
+          clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+          transition: 'all 0.3s ease',
+          zIndex: 10,
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(255,107,0,0.25)'
+          e.currentTarget.style.borderColor = 'rgba(255,107,0,0.5)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+        }}
+      >
+        <X size={20} />
+      </button>
+
+      {/* Prev */}
+      <LightboxNavButton dir="left" onClick={e => { e.stopPropagation(); onNavigate(-1) }} />
+
+      {/* Next */}
+      <LightboxNavButton dir="right" onClick={e => { e.stopPropagation(); onNavigate(1) }} />
+
+      {/* Image container */}
+      <div onClick={e => e.stopPropagation()} style={{
+        maxWidth: '85vw', maxHeight: '85vh', position: 'relative',
+        animation: 'scaleIn 0.4s cubic-bezier(0.16,1,0.3,1)',
+      }}>
+        <img
+          src={item.src}
+          alt={item.alt}
+          style={{
+            maxWidth: '85vw',
+            maxHeight: '75vh',
+            objectFit: 'contain',
+            border: '1px solid rgba(255,255,255,0.08)',
+            display: 'block',
+          }}
+        />
+        {/* Info bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 0', marginTop: 12,
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          flexWrap: 'wrap', gap: 12,
+        }}>
+          <div>
+            <h4 style={{
+              fontFamily: 'Bebas Neue',
+              fontSize: 24,
+              color: '#fff',
+              letterSpacing: '0.05em',
+              margin: '0 0 4px',
+            }}>
+              {item.title}
+            </h4>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+              {item.desc}
+            </p>
+          </div>
+          <span style={{
+            padding: '6px 14px',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            background: 'rgba(255,107,0,0.15)',
+            border: '1px solid rgba(255,107,0,0.3)',
+            color: 'var(--accent-orange)',
+            clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+            flexShrink: 0,
+          }}>
+            {item.category}
+          </span>
+        </div>
+        {/* Counter */}
+        <div style={{
+          position: 'absolute', top: 16, left: 16,
+          padding: '6px 14px',
+          background: 'rgba(0,0,0,0.7)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          fontSize: 11, fontWeight: 700,
+          letterSpacing: '0.12em',
+          color: 'rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(8px)',
+          clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+        }}>
+          <span style={{ color: 'var(--accent-orange)' }}>{activeIndex + 1}</span> / {items.length}
+        </div>
+      </div>
+
+      {/* Bottom hint */}
+      <div style={{
+        position: 'fixed', bottom: 28, left: '50%',
+        transform: 'translateX(-50%)', textAlign: 'center',
+      }}>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+          Use ← → arrows · Press ESC to close
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function LightboxNavButton({ dir, onClick }: { dir: 'left' | 'right'; onClick: (e: React.MouseEvent) => void }) {
+  const [hovered, setHovered] = useState(false)
+  const isLeft = dir === 'left'
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'absolute',
+        [isLeft ? 'left' : 'right']: 24,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: 52, height: 52,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,255,255,0.06)',
+        border: `1px solid ${hovered ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.12)'}`,
+        color: hovered ? 'var(--accent-orange)' : '#fff',
+        cursor: 'pointer',
+        clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+        transition: 'all 0.3s ease',
+        zIndex: 10,
+      }}
+    >
+      {isLeft ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+    </button>
   )
 }

@@ -8,6 +8,8 @@ export const ADMIN_PAGES = [
   { key: 'trainers', label: 'Trainers', href: '/admin/dashboard/trainers' },
   { key: 'gallery', label: 'Gallery', href: '/admin/dashboard/gallery' },
   { key: 'settings', label: 'User Access', href: '/admin/dashboard/settings' },
+  { key: 'events',   label: 'Events', href: '/admin/dashboard/Events' },
+  { key: 'schedule', label: 'Schedule', href: '/admin/dashboard/Schedule' },
 ] as const
 
 export type AdminPageKey = (typeof ADMIN_PAGES)[number]['key']

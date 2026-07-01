@@ -3,29 +3,46 @@
 import { useEffect, useState } from 'react'
 
 const emptyForm = {
-  name: '',
-  role: '',
-  speciality: '',
-  experience: '',
-  certifications: '',
-  initials: '',
-  color: '#FF6B00',
-  instagram: '',
+  title: '',
+  description: '',
+  category: 'Competition',
+  day: '',
+  month: '',
+  year: '2025',
   isActive: true,
 }
 
-export default function TrainersPage() {
-  const [trainers, setTrainers] = useState<any[]>([])
+const categories = ['Competition', 'Event', 'Championship', 'Workshop', 'Special']
+const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+const catColor: Record<string, string> = {
+  Competition: '#ef4444',
+  Event: '#3b82f6',
+  Championship: '#FF6B00',
+  Workshop: '#a855f7',
+  Special: '#22c55e',
+}
+
+export default function EventsAdminPage() {
+  const [events, setEvents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState(emptyForm)
-  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   async function load() {
     setLoading(true)
-    const res = await fetch('/api/admin/trainers')
-    const data = await res.json()
-    setTrainers(data.trainers || [])
+    try {
+      const res = await fetch('/api/admin/events')
+      console.log('LOAD status:', res.status)
+      const data = await res.json()
+      console.log('LOAD data:', data)
+      setEvents(data.events || [])
+    } catch (err) {
+      console.error('LOAD error:', err)
+    }
     setLoading(false)
   }
 
@@ -36,66 +53,111 @@ export default function TrainersPage() {
   function openAdd() {
     setEditing(null)
     setForm(emptyForm)
+    setErrorMsg('')
     setShowModal(true)
   }
 
-  function openEdit(t: any) {
-    setEditing(t)
+  function openEdit(ev: any) {
+    setEditing(ev)
     setForm({
-      name: t.name,
-      role: t.role,
-      speciality: t.speciality,
-      experience: t.experience,
-      certifications: t.certifications,
-      initials: t.initials,
-      color: t.color,
-      instagram: t.instagram || '',
-      isActive: t.isActive,
+      title: ev.title,
+      description: ev.description,
+      category: ev.category,
+      day: ev.day,
+      month: ev.month,
+      year: ev.year,
+      isActive: ev.isActive,
     })
+    setErrorMsg('')
     setShowModal(true)
   }
 
   async function handleSave() {
-    if (editing) {
-      await fetch('/api/admin/trainers', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editing._id, ...form }),
-      })
-    } else {
-      await fetch('/api/admin/trainers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
+    setSaving(true)
+    setErrorMsg('')
+    try {
+      let res
+      if (editing) {
+        res = await fetch('/api/admin/events', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editing._id, ...form }),
+        })
+      } else {
+        res = await fetch('/api/admin/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+      }
+
+      console.log('SAVE status:', res.status)
+      const data = await res.json().catch(() => ({}))
+      console.log('SAVE response body:', data)
+
+      if (!res.ok) {
+        setErrorMsg(`Save failed (${res.status}): ${data.error || 'Unknown error'}`)
+        setSaving(false)
+        return
+      }
+
+      setShowModal(false)
+      load()
+    } catch (err: any) {
+      console.error('SAVE exception:', err)
+      setErrorMsg('Network error: ' + err.message)
     }
-    setShowModal(false)
-    load()
+    setSaving(false)
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this trainer?')) return
-    await fetch('/api/admin/trainers', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    load()
+    if (!confirm('Delete this event?')) return
+    try {
+      const res = await fetch('/api/admin/events', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      console.log('DELETE status:', res.status)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(`Delete failed (${res.status}): ${data.error || 'Unknown error'}`)
+        return
+      }
+      load()
+    } catch (err: any) {
+      alert('Network error: ' + err.message)
+    }
   }
 
-  const activeCount = trainers.filter((t) => t.isActive).length
-  const inactiveCount = trainers.filter((t) => !t.isActive).length
+  async function toggleActive(ev: any) {
+    try {
+      const res = await fetch('/api/admin/events', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ev._id, isActive: !ev.isActive }),
+      })
+      console.log('TOGGLE status:', res.status)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(`Toggle failed (${res.status}): ${data.error || 'Unknown error'}`)
+        return
+      }
+      load()
+    } catch (err: any) {
+      alert('Network error: ' + err.message)
+    }
+  }
+
+  const activeCount = events.filter((e) => e.isActive).length
+  const hiddenCount = events.filter((e) => !e.isActive).length
+  const categoriesCount = new Set(events.map((e) => e.category).filter(Boolean)).size
 
   const stats = [
-    { label: 'Total Trainers', value: trainers.length, icon: '◉', color: '#FF6B00' },
-    { label: 'Active Trainers', value: activeCount, icon: '◎', color: '#22c55e' },
-    { label: 'Inactive', value: inactiveCount, icon: '◈', color: '#ef4444' },
-    {
-      label: 'Specialities',
-      value: new Set(trainers.map((t) => t.speciality).filter(Boolean)).size,
-      icon: '✦',
-      color: '#a855f7',
-    },
+    { label: 'Total Events', value: events.length, icon: '◉', color: '#FF6B00' },
+    { label: 'Active', value: activeCount, icon: '◎', color: '#22c55e' },
+    { label: 'Hidden', value: hiddenCount, icon: '◈', color: '#ef4444' },
+    { label: 'Categories', value: categoriesCount, icon: '▤', color: '#a855f7' },
   ]
 
   return (
@@ -142,11 +204,11 @@ export default function TrainersPage() {
                 lineHeight: 1,
               }}
             >
-              Trainers
+              Events
             </h1>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 8 }}>
-              {trainers.length} trainer{trainers.length !== 1 ? 's' : ''} on team. Manage your
-              coaching staff here.
+              {events.length} event{events.length !== 1 ? 's' : ''} total. Manage competitions,
+              workshops & special events.
             </p>
           </div>
           <button
@@ -175,7 +237,7 @@ export default function TrainersPage() {
               flexShrink: 0,
             }}
           >
-            + Add Trainer
+            + Add Event
           </button>
         </div>
       </div>
@@ -195,7 +257,7 @@ export default function TrainersPage() {
         ))}
       </div>
 
-      {/* Trainers Container */}
+      {/* Events Container */}
       <div
         style={{
           background: 'rgba(255,255,255,0.02)',
@@ -218,8 +280,8 @@ export default function TrainersPage() {
           }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>All Trainers</span>
-            {trainers.length > 0 && (
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>All Events</span>
+            {events.length > 0 && (
               <div
                 style={{
                   background: 'var(--accent-orange)',
@@ -237,7 +299,7 @@ export default function TrainersPage() {
                     'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
                 }}
               >
-                {trainers.length}
+                {events.length}
               </div>
             )}
           </div>
@@ -250,7 +312,7 @@ export default function TrainersPage() {
               textTransform: 'uppercase',
             }}
           >
-            {activeCount} Active · {inactiveCount} Inactive
+            {activeCount} Active · {hiddenCount} Hidden
           </span>
         </div>
 
@@ -263,9 +325,9 @@ export default function TrainersPage() {
               fontSize: 13,
             }}
           >
-            Loading trainers...
+            Loading events...
           </div>
-        ) : trainers.length === 0 ? (
+        ) : events.length === 0 ? (
           <div
             style={{
               padding: 64,
@@ -275,27 +337,21 @@ export default function TrainersPage() {
             }}
           >
             <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.3 }}>◉</div>
-            <div style={{ marginBottom: 6 }}>No trainers yet</div>
+            <div style={{ marginBottom: 6 }}>No events yet</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.15)' }}>
-              Click &quot;+ Add Trainer&quot; to add your first team member.
+              Click &quot;+ Add Event&quot; to create your first event.
             </div>
           </div>
         ) : (
-          <div
-            className="trainers-card-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 0,
-            }}
-          >
-            {trainers.map((t, i) => (
-              <TrainerCard
-                key={t._id}
-                trainer={t}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {events.map((ev, i) => (
+              <EventCard
+                key={ev._id}
+                event={ev}
                 index={i}
-                onEdit={() => openEdit(t)}
-                onDelete={() => handleDelete(t._id)}
+                onEdit={() => openEdit(ev)}
+                onDelete={() => handleDelete(ev._id)}
+                onToggle={() => toggleActive(ev)}
               />
             ))}
           </div>
@@ -304,12 +360,14 @@ export default function TrainersPage() {
 
       {/* Modal */}
       {showModal && (
-        <TrainerModal
+        <EventModal
           editing={editing}
           form={form}
           setForm={setForm}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          saving={saving}
+          errorMsg={errorMsg}
         />
       )}
 
@@ -320,7 +378,6 @@ export default function TrainersPage() {
         }
         @media (max-width: 640px) {
           .stats-grid { grid-template-columns: 1fr !important; }
-          .trainers-card-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
@@ -424,34 +481,44 @@ function StatCard({
   )
 }
 
-/* ─── Trainer Card ─── */
-function TrainerCard({
-  trainer: t,
+/* ─── Event Card ─── */
+function EventCard({
+  event: ev,
   index,
   onEdit,
   onDelete,
+  onToggle,
 }: {
-  trainer: any
+  event: any
   index: number
   onEdit: () => void
   onDelete: () => void
+  onToggle: () => void
 }) {
   const [hovered, setHovered] = useState(false)
+  const color = catColor[ev.category] || '#FF6B00'
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="event-card"
       style={{
+        display: 'grid',
+        gridTemplateColumns: '90px 1fr auto',
+        gap: 24,
+        alignItems: 'center',
+        padding: '20px 24px',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
-        borderRight: '1px solid rgba(255,255,255,0.04)',
         background: hovered ? 'rgba(255,107,0,0.03)' : 'transparent',
         transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
         animation: `fadeIn 0.4s ease ${index * 0.05}s both`,
         position: 'relative',
         overflow: 'hidden',
+        opacity: ev.isActive ? 1 : 0.6,
       }}
     >
+      {/* Left accent bar on hover */}
       <div
         style={{
           position: 'absolute',
@@ -459,239 +526,248 @@ function TrainerCard({
           left: 0,
           bottom: 0,
           width: 2,
-          background: t.color,
+          background: color,
           transform: hovered ? 'scaleY(1)' : 'scaleY(0)',
           transformOrigin: 'top',
           transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
         }}
       />
 
+      {/* Date Block */}
       <div
         style={{
-          height: 72,
-          background: `${t.color}08`,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 20px',
-          gap: 14,
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          textAlign: 'center',
+          padding: '12px 8px',
+          background: `${color}08`,
+          border: `1px solid ${color}20`,
+          clipPath:
+            'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+          transition: 'all 0.3s ease',
+          transform: hovered ? 'scale(1.02)' : 'scale(1)',
         }}
       >
         <div
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: `${t.color}18`,
-            border: `2px solid ${t.color}40`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s ease',
-            transform: hovered ? 'scale(1.08)' : 'scale(1)',
-            flexShrink: 0,
+            fontFamily: 'Bebas Neue, sans-serif',
+            fontSize: 32,
+            color: '#fff',
+            lineHeight: 1,
           }}
         >
+          {ev.day}
+        </div>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.15em',
+            color: color,
+            textTransform: 'uppercase',
+            marginTop: 2,
+          }}
+        >
+          {ev.month}
+        </div>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{ev.year}</div>
+      </div>
+
+      {/* Info */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span
             style={{
-              fontFamily: 'Bebas Neue, sans-serif',
-              fontSize: 18,
-              color: t.color,
-              lineHeight: 1,
+              fontSize: 9,
+              fontWeight: 700,
+              padding: '3px 10px',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              background: `${color}18`,
+              color: color,
+              border: `1px solid ${color}33`,
+              clipPath:
+                'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
             }}
           >
-            {t.initials}
+            {ev.category}
+          </span>
+          <span
+            style={{
+              fontSize: 9,
+              color: ev.isActive ? '#22c55e' : '#ef4444',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: ev.isActive ? '#22c55e' : '#ef4444',
+                boxShadow: ev.isActive ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
+              }}
+            />
+            {ev.isActive ? 'Active' : 'Hidden'}
           </span>
         </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#fff',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {t.name}
-          </div>
-          <div
-            style={{
-              fontSize: 10,
-              color: 'var(--accent-orange)',
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 2,
-            }}
-          >
-            {t.role}
-          </div>
-        </div>
-
-        <span
+        <div
           style={{
-            fontSize: 9,
+            fontFamily: 'Bebas Neue, sans-serif',
+            fontSize: 20,
+            color: '#fff',
+            letterSpacing: '0.04em',
+            marginBottom: 4,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {ev.title}
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.4)',
+            lineHeight: 1.5,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {ev.description}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div
+        className="event-actions"
+        style={{ display: 'flex', gap: 8, flexShrink: 0 }}
+      >
+        <button
+          onClick={onToggle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+          }}
+          style={{
+            background: ev.isActive ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+            border: `1px solid ${ev.isActive ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)'}`,
+            color: ev.isActive ? '#ef4444' : '#22c55e',
+            padding: '8px 14px',
+            fontSize: 10,
             fontWeight: 700,
-            padding: '3px 10px',
-            background: t.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-            color: t.isActive ? '#22c55e' : '#ef4444',
-            border: `1px solid ${t.isActive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
             clipPath:
-              'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
-            flexShrink: 0,
+              'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
           }}
         >
-          {t.isActive ? 'Active' : 'Inactive'}
-        </span>
-      </div>
-
-      <div style={{ padding: '14px 20px' }}>
-        <div
+          {ev.isActive ? 'Hide' : 'Show'}
+        </button>
+        <button
+          onClick={onEdit}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
+            e.currentTarget.style.color = 'var(--accent-orange)'
+            e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+            e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+          }}
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px 16px',
-            marginBottom: 14,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.6)',
+            padding: '8px 14px',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            clipPath:
+              'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
           }}
         >
-          <DetailItem label="Speciality" value={t.speciality} />
-          <DetailItem label="Experience" value={t.experience} />
-          <DetailItem label="Certifications" value={t.certifications} />
-          {t.instagram && <DetailItem label="Instagram" value={t.instagram} />}
-        </div>
-
-        <div
+          Edit
+        </button>
+        <button
+          onClick={onDelete}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.15)'
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'
+          }}
           style={{
-            display: 'flex',
-            gap: 8,
-            paddingTop: 10,
-            borderTop: '1px solid rgba(255,255,255,0.04)',
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            color: 'rgba(239,68,68,0.7)',
+            padding: '8px 14px',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            clipPath:
+              'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
           }}
         >
-          <button
-            onClick={onEdit}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
-              e.currentTarget.style.color = 'var(--accent-orange)'
-              e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-              e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-            }}
-            style={{
-              flex: 1,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.6)',
-              padding: '9px',
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              clipPath:
-                'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-            }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={onDelete}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.15)'
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)'
-            }}
-            style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              color: 'rgba(239,68,68,0.7)',
-              padding: '9px 14px',
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              clipPath:
-                'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-            }}
-          >
-            ✕
-          </button>
-        </div>
+          Delete
+        </button>
       </div>
-    </div>
-  )
-}
 
-/* ─── Detail Item ─── */
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div
-        style={{
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.25)',
-          marginBottom: 2,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 12,
-          color: 'rgba(255,255,255,0.55)',
-          lineHeight: 1.4,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {value || '—'}
-      </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .event-card {
+            grid-template-columns: 70px 1fr !important;
+            gap: 16px !important;
+          }
+          .event-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 4px;
+          }
+        }
+      `}</style>
     </div>
   )
 }
 
 /* ─── Modal ─── */
-function TrainerModal({
+function EventModal({
   editing,
   form,
   setForm,
   onSave,
   onClose,
+  saving,
+  errorMsg,
 }: {
   editing: any
   form: typeof emptyForm
   setForm: React.Dispatch<React.SetStateAction<typeof emptyForm>>
   onSave: () => void
   onClose: () => void
+  saving: boolean
+  errorMsg: string
 }) {
-  const fields = [
-    { key: 'name', label: 'Full Name', placeholder: 'Ahmed Raza' },
-    { key: 'role', label: 'Role / Title', placeholder: 'Head Strength Coach' },
-    { key: 'speciality', label: 'Speciality', placeholder: 'Powerlifting & Hypertrophy' },
-    { key: 'experience', label: 'Experience', placeholder: '10 Years' },
-    { key: 'certifications', label: 'Certifications', placeholder: 'NASM-CPT, CSCS' },
-    { key: 'initials', label: 'Initials (2 letters)', placeholder: 'AR' },
-    { key: 'instagram', label: 'Instagram Handle', placeholder: '@ahmedraza' },
-  ]
-
   const inputStyle: React.CSSProperties = {
     width: '100%',
     background: 'rgba(255,255,255,0.04)',
@@ -743,6 +819,7 @@ function TrainerModal({
           style={{ height: 2, background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)' }}
         />
 
+        {/* Header */}
         <div
           style={{
             padding: '20px 28px',
@@ -768,7 +845,7 @@ function TrainerModal({
                   'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
               }}
             >
-              {editing ? '✎' : '+'}
+              {editing ? '✎' : '◉'}
             </div>
             <span
               style={{
@@ -778,7 +855,7 @@ function TrainerModal({
                 letterSpacing: '0.05em',
               }}
             >
-              {editing ? 'Edit Trainer' : 'Add Trainer'}
+              {editing ? 'Edit Event' : 'Add Event'}
             </span>
           </div>
           <button
@@ -810,6 +887,7 @@ function TrainerModal({
           </button>
         </div>
 
+        {/* Form */}
         <div
           style={{
             padding: '24px 28px',
@@ -818,37 +896,24 @@ function TrainerModal({
             gap: 16,
           }}
         >
-          {fields.map((f) => (
-            <div key={f.key}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.35)',
-                  marginBottom: 6,
-                }}
-              >
-                {f.label}
-              </label>
-              <input
-                type="text"
-                placeholder={f.placeholder}
-                value={(form as any)[f.key]}
-                onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                }}
-                style={inputStyle}
-              />
+          {/* Error message */}
+          {errorMsg && (
+            <div
+              style={{
+                background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                color: '#ef4444',
+                padding: '12px 14px',
+                fontSize: 12,
+                clipPath:
+                  'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+              }}
+            >
+              {errorMsg}
             </div>
-          ))}
+          )}
 
+          {/* Event Title */}
           <div>
             <label
               style={{
@@ -861,55 +926,157 @@ function TrainerModal({
                 marginBottom: 6,
               }}
             >
-              Card Color
+              Event Title
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                style={{
-                  width: 48,
-                  height: 40,
-                  background: 'none',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 0,
-                  cursor: 'pointer',
-                  padding: 2,
-                  clipPath:
-                    'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-                }}
-              />
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: `${form.color}30`,
-                  border: `2px solid ${form.color}60`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'Bebas Neue, sans-serif',
-                    fontSize: 11,
-                    color: form.color,
+            <input
+              type="text"
+              placeholder="Benchpress Hackathon"
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Description
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Event description..."
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={{ ...inputStyle, resize: 'none' }}
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Category
+            </label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              }}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date Fields */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 6,
+              }}
+            >
+              Event Date
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Day"
+                  value={form.day}
+                  onChange={(e) => setForm((f) => ({ ...f, day: e.target.value }))}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
                   }}
-                >
-                  {form.initials || '??'}
-                </span>
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  }}
+                  style={inputStyle}
+                />
               </div>
-              <span
-                style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}
-              >
-                {form.color}
-              </span>
+              <div>
+                <select
+                  value={form.month}
+                  onChange={(e) => setForm((f) => ({ ...f, month: e.target.value }))}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  }}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                >
+                  <option value="">Month</option>
+                  {months.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="Year"
+                  value={form.year}
+                  onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,107,0,0.4)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  }}
+                  style={inputStyle}
+                />
+              </div>
             </div>
           </div>
 
+          {/* Active toggle */}
           <div
             style={{
               display: 'flex',
@@ -936,7 +1103,7 @@ function TrainerModal({
                 fontWeight: 500,
               }}
             >
-              Active Trainer
+              Show on website
             </label>
             <span
               style={{
@@ -953,24 +1120,30 @@ function TrainerModal({
                 textTransform: 'uppercase',
               }}
             >
-              {form.isActive ? 'Active' : 'Inactive'}
+              {form.isActive ? 'Active' : 'Hidden'}
             </span>
           </div>
 
+          {/* Actions */}
           <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
             <button
               onClick={onSave}
+              disabled={saving}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#e05e00'
-                e.currentTarget.style.transform = 'translateY(-1px)'
+                if (!saving) {
+                  e.currentTarget.style.background = '#e05e00'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--accent-orange)'
+                e.currentTarget.style.background = saving
+                  ? 'rgba(255,107,0,0.5)'
+                  : 'var(--accent-orange)'
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
               style={{
                 flex: 1,
-                background: 'var(--accent-orange)',
+                background: saving ? 'rgba(255,107,0,0.5)' : 'var(--accent-orange)',
                 border: 'none',
                 color: '#fff',
                 padding: '14px',
@@ -978,13 +1151,14 @@ function TrainerModal({
                 fontWeight: 700,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
-                cursor: 'pointer',
+                cursor: saving ? 'not-allowed' : 'pointer',
                 clipPath:
                   'polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))',
                 transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                opacity: saving ? 0.7 : 1,
               }}
             >
-              {editing ? 'Save Changes' : 'Add Trainer'}
+              {saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Event'}
             </button>
             <button
               onClick={onClose}

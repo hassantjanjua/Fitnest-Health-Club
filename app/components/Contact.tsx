@@ -35,6 +35,7 @@ export default function Contact() {
     transition: `opacity 0.9s ease ${delay}s, transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
   })
 
+  // Database-connected submit handler
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !email.trim() || !message.trim()) {
@@ -78,15 +79,34 @@ export default function Contact() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Background accent */}
+      {/* Background glows */}
       <div style={{
         position: 'absolute', bottom: '-20%', right: '-10%',
         width: 700, height: 700, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(255,107,0,0.05) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
+      <div style={{
+        position: 'absolute', top: '-15%', left: '-10%',
+        width: 500, height: 500, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255,107,0,0.04) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="contact-container">
+      {/* Diagonal lines */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: '-50%',
+            right: `${i * 140 - 80}px`,
+            width: '1px', height: '200%',
+            background: 'rgba(255,107,0,0.035)',
+            transform: 'rotate(-20deg)',
+          }} />
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }} className="hero-container">
 
         {/* Header */}
         <div style={{ marginBottom: 'clamp(40px, 5vw, 64px)' }}>
@@ -108,7 +128,7 @@ export default function Contact() {
         </div>
 
         {/* Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 80 }} className="contact-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 80 }} className="hero-bottom-grid">
 
           {/* Left: Contact Info */}
           <div>
@@ -121,117 +141,137 @@ export default function Contact() {
             ))}
 
             {/* Map Link */}
-            <div style={{ ...fade(0.5), marginTop: 40, textAlign: 'center' }}>
+            <div style={{ ...fade(0.5), marginTop: 40 }}>
               <div style={{
-                width: 56, height: 56, margin: '0 auto 16px',
-                background: 'rgba(255,107,0,0.1)',
-                border: '1px solid rgba(255,107,0,0.2)',
-                borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,107,0,0.12)',
+                padding: '28px 24px',
+                textAlign: 'center',
+                clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
+                position: 'relative', overflow: 'hidden',
               }}>
-                <MapPin size={24} color="var(--accent-orange)" />
+                {/* Grid pattern background */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,107,0,0.03) 30px, rgba(255,107,0,0.03) 31px), repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,107,0,0.03) 30px, rgba(255,107,0,0.03) 31px)',
+                }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{
+                    width: 56, height: 56, margin: '0 auto 16px',
+                    background: 'rgba(255,107,0,0.1)',
+                    border: '1px solid rgba(255,107,0,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+                  }}>
+                    <MapPin size={24} color="var(--accent-orange)" />
+                  </div>
+                  <div style={{
+                    fontFamily: 'Bebas Neue', fontSize: 22, color: '#fff',
+                    letterSpacing: '0.05em', marginBottom: 4,
+                  }}>
+                    Model Town, Lahore
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>
+                    Punjab, Pakistan
+                  </div>
+                  <MapLink />
+                </div>
               </div>
-              <div style={{ fontSize: 12, marginBottom: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
-                Model Town, Lahore
-              </div>
-              <a
-                href="https://maps.google.com/?q=Model+Town+Lahore"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: 'var(--accent-orange)',
-                  textDecoration: 'none',
-                  borderBottom: '1px solid rgba(255,107,0,0.3)',
-                  paddingBottom: 2,
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--accent-orange)'
-                  e.currentTarget.style.gap = '10px'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255,107,0,0.3)'
-                  e.currentTarget.style.gap = '6px'
-                }}
-              >
-                Open in Google Maps <ArrowRight size={12} />
-              </a>
             </div>
           </div>
 
           {/* Right: Form */}
           <div style={fade(0.3)}>
-            <form onSubmit={handleSubmit} style={{
+            <div style={{
               background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              padding: 'clamp(24px, 3vw, 40px)',
+              border: '1px solid rgba(255,107,0,0.15)',
+              position: 'relative', overflow: 'hidden',
               clipPath: 'polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,20px 100%,0 calc(100% - 20px))',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
             }}>
-              <div style={{ fontFamily: 'Bebas Neue', fontSize: 11, letterSpacing: '0.28em', color: 'var(--accent-orange)', marginBottom: 24, textTransform: 'uppercase' }}>
-                Send Us a Message
-              </div>
+              {/* Top accent bar */}
+              <div style={{ height: 3, background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)' }} />
 
-              <FormInput placeholder="Full Name *" value={name} onChange={setName} />
-              <FormInput placeholder="Phone Number" value={phone} onChange={setPhone} style={{ marginTop: 12 }} />
-              <FormInput placeholder="Email Address *" value={email} onChange={setEmail} type="email" style={{ marginTop: 12 }} />
-              <FormTextarea placeholder="Your Message *" value={message} onChange={setMessage} style={{ marginTop: 12 }} />
-
-              {error && (
+              <div style={{ padding: 'clamp(28px, 3vw, 44px)' }}>
                 <div style={{
-                  marginTop: 14,
-                  padding: '10px 12px',
-                  border: '1px solid rgba(239,68,68,0.28)',
-                  background: 'rgba(239,68,68,0.08)',
-                  color: '#fca5a5',
-                  fontSize: 12,
-                  lineHeight: 1.5,
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28,
                 }}>
-                  {error}
+                  <Send size={16} color="var(--accent-orange)" />
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.22em',
+                    textTransform: 'uppercase', color: 'var(--accent-orange)',
+                  }}>
+                    Send Us a Message
+                  </span>
                 </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={sending || sent}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  marginTop: 20,
-                  padding: '16px',
-                  fontSize: 12,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  background: sent ? '#22c55e' : undefined,
-                  opacity: sending ? 0.7 : 1,
-                  cursor: 'pointer',
-                }}
-              >
-                {sent ? (
-                  <>✓ Message Sent!</>
-                ) : sending ? (
-                  <>Sending...</>
-                ) : (
-                  <><Send size={14} /> Send Message</>
-                )}
-              </button>
+                <form onSubmit={handleSubmit}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                    <FormInput label="Full Name" placeholder="Your name *" value={name} onChange={setName} />
+                    <FormInput label="Email" placeholder="your@email.com *" value={email} onChange={setEmail} type="email" />
+                  </div>
 
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 16, textAlign: 'center' }}>
-                We&apos;ll get back to you within 2 hours during operating hours
-              </p>
-            </form>
+                  <FormInput label="Phone" placeholder="+92 3XX XXXXXXX" value={phone} onChange={setPhone} style={{ marginBottom: 14 }} />
+
+                  <FormTextarea label="Message" placeholder="Tell us about your fitness goals... *" value={message} onChange={setMessage} style={{ marginBottom: 20 }} />
+
+                  {error && (
+                    <div style={{
+                      marginBottom: 16,
+                      padding: '12px 16px',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      background: 'rgba(239,68,68,0.08)',
+                      color: '#fca5a5',
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+                    }}>
+                      {error}
+                    </div>
+                  )}
+
+                  <SubmitButton sending={sending} sent={sent} />
+
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 16, textAlign: 'center' }}>
+                    We&apos;ll get back to you within 2 hours during operating hours
+                  </p>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
+  )
+}
+
+function MapLink() {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <a
+      href="https://maps.google.com/?q=Model+Town+Lahore"
+      target="_blank"
+      rel="noopener noreferrer"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: hovered ? 10 : 6,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        color: 'var(--accent-orange)',
+        textDecoration: 'none',
+        borderBottom: `1px solid ${hovered ? 'var(--accent-orange)' : 'rgba(255,107,0,0.3)'}`,
+        paddingBottom: 2,
+        transition: 'all 0.3s ease',
+      }}
+    >
+      Open in Google Maps <ArrowRight size={12} />
+    </a>
   )
 }
 
@@ -248,33 +288,35 @@ function ContactItem({ item, fadeStyle }: {
         ...fadeStyle,
         display: 'flex',
         gap: 18,
-        marginBottom: 20,
-        padding: '16px',
-        background: hovered ? 'rgba(255,107,0,0.04)' : 'transparent',
-        border: `1px solid ${hovered ? 'rgba(255,107,0,0.15)' : 'transparent'}`,
-        borderRadius: 4,
+        alignItems: 'center',
+        marginBottom: 12,
+        padding: '16px 18px',
+        background: hovered ? 'rgba(255,107,0,0.04)' : 'rgba(255,255,255,0.01)',
+        border: `1px solid ${hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,255,255,0.05)'}`,
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         cursor: 'default',
+        transform: hovered ? 'translateX(6px)' : 'translateX(0)',
+        clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{
-        width: 44, height: 44,
+        width: 44, height: 44, flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(255,107,0,0.1)',
-        border: '1px solid rgba(255,107,0,0.2)',
+        background: hovered ? 'var(--accent-orange)' : 'rgba(255,107,0,0.08)',
+        border: `1px solid ${hovered ? 'var(--accent-orange)' : 'rgba(255,107,0,0.2)'}`,
         clipPath: 'polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))',
         transition: 'all 0.35s ease',
-        transform: hovered ? 'scale(1.1)' : 'scale(1)',
+        transform: hovered ? 'scale(1.1) rotate(-3deg)' : 'scale(1)',
       }}>
-        <Icon size={18} color="var(--accent-orange)" />
+        <Icon size={18} color={hovered ? '#fff' : 'var(--accent-orange)'} style={{ transition: 'color 0.3s' }} />
       </div>
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,107,0,0.7)', marginBottom: 4 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,107,0,0.7)', marginBottom: 4 }}>
           {item.label}
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15 }}>
+        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: 500 }}>
           {item.value}
         </div>
       </div>
@@ -282,7 +324,8 @@ function ContactItem({ item, fadeStyle }: {
   )
 }
 
-function FormInput({ placeholder, value, onChange, type = 'text', style = {} }: {
+function FormInput({ label, placeholder, value, onChange, type = 'text', style = {} }: {
+  label: string
   placeholder: string
   value: string
   onChange: (val: string) => void
@@ -292,30 +335,40 @@ function FormInput({ placeholder, value, onChange, type = 'text', style = {} }: 
   const [focused, setFocused] = useState(false)
 
   return (
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        width: '100%',
-        background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
-        color: '#fff',
-        padding: '14px 18px',
-        fontSize: 14,
-        borderRadius: 2,
-        outline: 'none',
-        transition: 'all 0.3s ease',
-        ...style,
-      }}
-    />
+    <div style={style}>
+      <label style={{
+        fontSize: 9, fontWeight: 700, letterSpacing: '0.15em',
+        textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
+        display: 'block', marginBottom: 8,
+      }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%',
+          background: 'rgba(255,255,255,0.04)',
+          border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+          color: '#fff',
+          padding: '12px 14px',
+          fontSize: 13,
+          outline: 'none',
+          transition: 'all 0.3s ease',
+          fontFamily: 'Inter, sans-serif',
+          clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+        }}
+      />
+    </div>
   )
 }
 
-function FormTextarea({ placeholder, value, onChange, style = {} }: {
+function FormTextarea({ label, placeholder, value, onChange, style = {} }: {
+  label: string
   placeholder: string
   value: string
   onChange: (val: string) => void
@@ -324,27 +377,79 @@ function FormTextarea({ placeholder, value, onChange, style = {} }: {
   const [focused, setFocused] = useState(false)
 
   return (
-    <textarea
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      rows={4}
+    <div style={style}>
+      <label style={{
+        fontSize: 9, fontWeight: 700, letterSpacing: '0.15em',
+        textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
+        display: 'block', marginBottom: 8,
+      }}>
+        {label}
+      </label>
+      <textarea
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        rows={4}
+        style={{
+          width: '100%',
+          background: 'rgba(255,255,255,0.04)',
+          border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+          color: '#fff',
+          padding: '12px 14px',
+          fontSize: 13,
+          outline: 'none',
+          resize: 'vertical',
+          transition: 'all 0.3s ease',
+          fontFamily: 'Inter, sans-serif',
+          clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
+        }}
+      />
+    </div>
+  )
+}
+
+function SubmitButton({ sending, sent }: { sending: boolean; sent: boolean }) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <button
+      type="submit"
+      disabled={sending || sent}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%',
-        background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${focused ? 'rgba(255,107,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+        padding: '16px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        cursor: sending || sent ? 'default' : 'pointer',
+        background: sent
+          ? '#22c55e'
+          : hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
         color: '#fff',
-        padding: '14px 18px',
-        fontSize: 14,
-        borderRadius: 2,
-        outline: 'none',
-        resize: 'none',
-        transition: 'all 0.3s ease',
-        fontFamily: 'inherit',
-        ...style,
+        border: 'none',
+        opacity: sending ? 0.7 : 1,
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered && !sending && !sent ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered && !sending && !sent ? '0 10px 30px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
       }}
-    />
+    >
+      {sent ? (
+        <>✓ Message Sent!</>
+      ) : sending ? (
+        <>Sending...</>
+      ) : (
+        <><Send size={14} /> Send Message</>
+      )}
+    </button>
   )
 }

@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Play, ChevronDown, Flame, Users, Trophy, Dumbbell, X } from 'lucide-react'
 
 const stats = [
-  { icon: Users, value: 500, suffix: '+', label: 'Active Members' },
-  { icon: Trophy, value: 15, suffix: '+', label: 'Expert Trainers' },
-  { icon: Flame, value: 8, suffix: 'Y', label: 'Years Strong' },
-  { icon: Dumbbell, value: 20, suffix: '+', label: 'Programs' },
+  { icon: Users, value: 500, suffix: '+', label: 'Active Members', color: '#ff6b00' },
+  { icon: Trophy, value: 15, suffix: '+', label: 'Expert Trainers', color: '#fff' },
+  { icon: Flame, value: 8, suffix: 'Y', label: 'Years Strong', color: '#ff6b00' },
+  { icon: Dumbbell, value: 20, suffix: '+', label: 'Programs', color: '#fff' },
 ]
 
 const words = ['STRENGTH', 'POWER', 'ENDURANCE', 'RESULTS']
@@ -69,8 +69,8 @@ export default function Hero() {
     }
   }, [videoOpen])
 
-  const navigateToPricing = () => {
-    const el = document.getElementById('pricing')
+  const navigateToContact = () => {
+    const el = document.getElementById('contact')
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -93,6 +93,7 @@ export default function Hero() {
         paddingBottom: 60,
         background: '#080808',
       }}>
+        {/* Background radial glow effects */}
         <div style={{
           position: 'absolute', top: '-10%', left: '-20%',
           width: '80vw', height: '80vw',
@@ -107,7 +108,8 @@ export default function Hero() {
           pointerEvents: 'none',
         }} />
 
-        <div className="hero-diagonals" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {/* Diagonal lines */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
           {[...Array(6)].map((_, i) => (
             <div key={i} style={{
               position: 'absolute', top: '-50%',
@@ -125,6 +127,7 @@ export default function Hero() {
           width: '100%', position: 'relative', zIndex: 1,
         }} className="hero-container">
 
+          {/* Tag line */}
           <div style={{
             ...fade(0.1),
             display: 'flex', alignItems: 'center',
@@ -140,6 +143,7 @@ export default function Hero() {
             </span>
           </div>
 
+          {/* Main heading */}
           <div style={{ marginBottom: 0, lineHeight: 0.88 }}>
             <div style={fade(0.15)}>
               <h1 style={{
@@ -184,10 +188,11 @@ export default function Hero() {
             </div>
           </div>
 
+          {/* Bottom grid: left content + right snapshot card */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 420px',
-            gap: 80,
+            gridTemplateColumns: '1fr 400px',
+            gap: 70,
             alignItems: 'start',
             marginTop: 52,
           }} className="hero-bottom-grid">
@@ -204,54 +209,31 @@ export default function Hero() {
                 elite coaches, and a culture built on transformation — not just workouts.
               </p>
 
+              {/* CTA Buttons */}
               <div style={{
                 ...fade(0.52),
                 display: 'flex',
                 gap: 16,
                 marginBottom: 44,
+                flexWrap: 'wrap',
               }} className="hero-cta-row">
-                <button
-                  className="btn-primary"
-                  onClick={navigateToPricing}
-                  style={{
-                    padding: '18px 44px',
-                    fontSize: 12,
-                    display: 'flex', alignItems: 'center',
-                    gap: 10,
-                  }}
-                >
-                  Start Your Journey <ArrowRight size={15} />
-                </button>
-
-                <button
-                  className="btn-outline"
-                  onClick={() => setVideoOpen(true)}
-                  style={{
-                    padding: '18px 36px',
-                    fontSize: 12,
-                    display: 'flex', alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    border: '1.5px solid rgba(255,107,0,0.4)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    transition: 'all 0.3s ease',
-                  }}>
-                    <Play size={12} fill="var(--accent-orange)" color="var(--accent-orange)" style={{ marginLeft: 2 }} />
-                  </div>
+                <HeroButton onClick={navigateToContact} primary>
+                  Start Your Journey <ArrowRight size={14} />
+                </HeroButton>
+                <HeroButton onClick={() => setVideoOpen(true)}>
+                  <PlayIcon />
                   Watch Story
-                </button>
+                </HeroButton>
               </div>
 
+              {/* Social proof */}
               <div style={{ ...fade(0.62), display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex' }}>
                   {['AK', 'MR', 'SH', 'ZA', 'FA'].map((init, i) => (
                     <div key={init} style={{
                       width: 38, height: 38,
                       borderRadius: '50%', border: '2.5px solid #080808',
-                      background: `hsl(${i * 40 + 10}, 65%, 48%)`,
+                      background: i % 2 === 0 ? 'var(--accent-orange)' : '#333',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 10, fontWeight: 800, color: '#fff',
                       marginLeft: i > 0 ? -10 : 0, zIndex: 5 - i, position: 'relative',
@@ -266,17 +248,19 @@ export default function Hero() {
                     {[...Array(5)].map((_, i) => (
                       <span key={i} style={{ color: '#FFB800', fontSize: 12 }}>★</span>
                     ))}
-                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>5.0 · 200+ reviews</span>
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginLeft: 4 }}>5.0 · 200+ reviews</span>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Snapshot card */}
             <div style={{ ...fade(0.38) }}>
-              <SnapshotCard onBookTrial={navigateToPricing} />
+              <SnapshotCard onBookTrial={navigateToContact} />
             </div>
           </div>
 
+          {/* Stats bar */}
           <div ref={statsRef} style={{
             ...fade(0.72),
             display: 'grid',
@@ -286,15 +270,16 @@ export default function Hero() {
             position: 'relative', overflow: 'hidden',
           }} className="hero-stats-grid">
             <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-              background: 'linear-gradient(90deg, transparent, var(--accent-orange), transparent)',
+              position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+              background: 'linear-gradient(90deg, var(--accent-orange), #ff9500, var(--accent-orange))',
             }} />
-            {stats.map(({ icon: Icon, suffix, label }, i) => (
-              <StatCard key={label} Icon={Icon} suffix={suffix} label={label} count={counts[i]} index={i} />
+            {stats.map(({ icon: Icon, suffix, label, color }, i) => (
+              <StatCard key={label} Icon={Icon} suffix={suffix} label={label} count={counts[i]} index={i} color={color} />
             ))}
           </div>
         </div>
 
+        {/* Scroll indicator */}
         <a href="#services" style={{
           position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
@@ -313,7 +298,7 @@ export default function Hero() {
         <div
           style={{
             position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
+            inset: 0,
             background: 'rgba(0, 0, 0, 0.95)',
             backdropFilter: 'blur(10px)',
             zIndex: 1000,
@@ -331,15 +316,15 @@ export default function Hero() {
               position: 'absolute', top: '24px', right: '24px',
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%',
               width: '56px', height: '56px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               zIndex: 10,
+              clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 107, 0, 0.2)'
+              e.currentTarget.style.background = 'rgba(255, 107, 0, 0.3)'
               e.currentTarget.style.borderColor = 'rgba(255, 107, 0, 0.5)'
             }}
             onMouseLeave={(e) => {
@@ -354,11 +339,11 @@ export default function Hero() {
             width: '100%', maxWidth: '1100px',
             aspectRatio: '16 / 9',
             background: '#000',
-            borderRadius: '4px',
             overflow: 'hidden',
             border: '1px solid rgba(255, 107, 0, 0.3)',
             boxShadow: '0 40px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255,107,0,0.1)',
             animation: 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
           }}>
             <iframe
               width="100%"
@@ -377,10 +362,10 @@ export default function Hero() {
             transform: 'translateX(-50%)', textAlign: 'center',
           }}>
             <p style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.22em',
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.22em',
               textTransform: 'uppercase', color: 'var(--accent-orange)', marginBottom: 6,
             }}>Our Story</p>
-            <p style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.35)' }}>
+            <p style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.35)' }}>
               Press ESC or click outside to close
             </p>
           </div>
@@ -390,8 +375,70 @@ export default function Hero() {
   )
 }
 
-function StatCard({ Icon, suffix, label, count, index }: {
-  Icon: React.ElementType; suffix: string; label: string; count: number; index: number
+/* ─── Extracted Button Components (components2 style) ─── */
+
+function HeroButton({ onClick, primary = false, children }: { onClick: () => void; primary?: boolean; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '18px 44px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase' as const,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        cursor: 'pointer',
+        background: primary
+          ? (hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)')
+          : (hovered ? 'rgba(255,107,0,0.08)' : 'transparent'),
+        color: primary ? '#fff' : (hovered ? 'var(--accent-orange)' : 'rgba(255,255,255,0.8)'),
+        border: primary ? 'none' : `1px solid ${hovered ? 'rgba(255,107,0,0.5)' : 'rgba(255,255,255,0.12)'}`,
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? (primary ? '0 12px 40px rgba(255,107,0,0.35)' : '0 8px 30px rgba(0,0,0,0.3)')
+          : 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <div style={{
+      width: 36, height: 36,
+      borderRadius: '50%',
+      border: '2px solid rgba(255,107,0,0.4)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+      background: 'rgba(255,107,0,0.1)',
+      position: 'relative',
+    }}>
+      {/* Pulse ring animation */}
+      <div style={{
+        position: 'absolute', inset: -4,
+        borderRadius: '50%',
+        border: '1px solid rgba(255,107,0,0.25)',
+        animation: 'pulse-ring 2s ease-out infinite',
+      }} />
+      <Play size={12} fill="var(--accent-orange)" color="var(--accent-orange)" style={{ marginLeft: 2 }} />
+    </div>
+  )
+}
+
+/* ─── Stat Card (components2 style with clip-path) ─── */
+
+function StatCard({ Icon, suffix, label, count, index, color }: {
+  Icon: React.ElementType; suffix: string; label: string; count: number; index: number; color: string
 }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -408,15 +455,16 @@ function StatCard({ Icon, suffix, label, count, index }: {
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{
-        width: 44, height: 44,
-        margin: '0 auto 12px',
-        background: hovered ? 'rgba(255,107,0,0.15)' : 'rgba(255,107,0,0.08)',
-        border: `1px solid ${hovered ? 'rgba(255,107,0,0.4)' : 'rgba(255,107,0,0.18)'}`,
-        borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 48, height: 48,
+        margin: '0 auto 14px',
+        background: hovered ? color : 'rgba(255,107,0,0.08)',
+        border: `1px solid ${hovered ? color : 'rgba(255,107,0,0.18)'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all 0.35s ease',
-        transform: hovered ? 'scale(1.1)' : 'scale(1)',
+        transform: hovered ? 'scale(1.1) rotate(-5deg)' : 'scale(1)',
+        clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
       }}>
-        <Icon size={18} color="var(--accent-orange)" />
+        <Icon size={20} color={hovered ? (color === '#fff' ? '#080808' : '#fff') : 'var(--accent-orange)'} style={{ transition: 'color 0.3s ease' }} />
       </div>
       <div style={{
         fontFamily: 'Bebas Neue',
@@ -436,6 +484,8 @@ function StatCard({ Icon, suffix, label, count, index }: {
   )
 }
 
+/* ─── Snapshot Card (components2 style with clip-path) ─── */
+
 function SnapshotCard({ onBookTrial }: { onBookTrial: () => void }) {
   return (
     <div style={{
@@ -443,6 +493,7 @@ function SnapshotCard({ onBookTrial }: { onBookTrial: () => void }) {
       background: 'rgba(14,14,14,0.95)',
       backdropFilter: 'blur(20px)',
       position: 'relative', overflow: 'hidden',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
       clipPath: 'polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,20px 100%,0 calc(100% - 20px))',
     }}>
       <div style={{ height: 3, background: 'linear-gradient(90deg, var(--accent-orange), #ff9500)' }} />
@@ -477,9 +528,10 @@ function SnapshotCard({ onBookTrial }: { onBookTrial: () => void }) {
         {['Free trial session for new members', 'Personal trainer consultation included', 'No joining fee this month'].map(feat => (
           <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{
-              width: 18, height: 18, borderRadius: '50%',
+              width: 18, height: 18,
               background: 'rgba(255,107,0,0.12)', border: '1px solid rgba(255,107,0,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
             }}>
               <span style={{ color: 'var(--accent-orange)', fontSize: 10, fontWeight: 900 }}>✓</span>
             </div>
@@ -487,19 +539,7 @@ function SnapshotCard({ onBookTrial }: { onBookTrial: () => void }) {
           </div>
         ))}
 
-        <button
-          className="btn-primary"
-          onClick={onBookTrial}
-          style={{
-            width: '100%',
-            padding: '15px',
-            fontSize: 11,
-            marginTop: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          Book a Free Trial <ArrowRight size={13} />
-        </button>
+        <SnapshotButton onClick={onBookTrial} />
       </div>
     </div>
   )
@@ -511,10 +551,11 @@ function SnapshotItem({ label, value, unit }: { label: string; value: string; un
     <div style={{
       background: hovered ? 'rgba(255,107,0,0.07)' : 'rgba(255,255,255,0.03)',
       border: `1px solid ${hovered ? 'rgba(255,107,0,0.2)' : 'rgba(255,255,255,0.06)'}`,
-      padding: '14px 16px', borderRadius: 4,
+      padding: '14px 16px',
       transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
       transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       cursor: 'default',
+      clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
     }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -527,5 +568,36 @@ function SnapshotItem({ label, value, unit }: { label: string; value: string; un
         <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{unit}</span>
       </div>
     </div>
+  )
+}
+
+function SnapshotButton({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%',
+        padding: '15px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase' as const,
+        marginTop: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        cursor: 'pointer',
+        background: hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
+        color: '#fff',
+        border: 'none',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 10px 30px rgba(255,107,0,0.35)' : 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+      }}
+    >
+      Book a Free Trial <ArrowRight size={13} />
+    </button>
   )
 }

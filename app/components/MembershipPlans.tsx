@@ -83,6 +83,24 @@ const fallbackPlans: MembershipPlan[] = [
   },
 ]
 
+function normalizePlan(plan: PlanApiItem, index: number): MembershipPlan | null {
+  if (!plan.name || typeof plan.price !== 'number') return null
+  const icons = [Star, Zap, Crown]
+  return {
+    _id: plan._id,
+    icon: plan.featured ? Zap : icons[index % icons.length],
+    name: plan.name,
+    price: plan.price,
+    period: plan.period || 'month',
+    tag: plan.tag || (plan.featured ? 'Best Value' : 'Membership'),
+    featured: Boolean(plan.featured),
+    features: Array.isArray(plan.features) && plan.features.length > 0
+      ? plan.features.filter(Boolean)
+      : ['Full gym access'],
+    cta: 'Contact Us',
+  }
+}
+
 export default function MembershipPlans() {
   const [visible, setVisible] = useState(false)
   const [plans, setPlans] = useState<MembershipPlan[]>(fallbackPlans)
@@ -97,6 +115,7 @@ export default function MembershipPlans() {
     return () => observer.disconnect()
   }, [])
 
+  // Fetch plans from database
   useEffect(() => {
     let alive = true
     async function loadPlans() {
@@ -127,6 +146,7 @@ export default function MembershipPlans() {
       position: 'relative',
       overflow: 'hidden',
     }}>
+      {/* Background glows */}
       <div style={{
         position: 'absolute', bottom: '0%', right: '-10%',
         width: 700, height: 700, borderRadius: '50%',
@@ -140,7 +160,20 @@ export default function MembershipPlans() {
         pointerEvents: 'none',
       }} />
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="plans-container">
+      {/* Diagonal lines */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: '-50%',
+            right: `${i * 140 - 80}px`,
+            width: '1px', height: '200%',
+            background: 'rgba(255,107,0,0.035)',
+            transform: 'rotate(-20deg)',
+          }} />
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="hero-container">
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 'clamp(48px, 6vw, 72px)' }}>
@@ -182,11 +215,11 @@ export default function MembershipPlans() {
           className="plans-grid"
         >
           {plans.map((plan, i) => (
-            <PlanCard key={plan.name} plan={plan} fadeStyle={fade(0.1 + i * 0.1)} />
+            <PlanCard key={plan._id || plan.name} plan={plan} fadeStyle={fade(0.1 + i * 0.1)} />
           ))}
         </div>
 
-        {/* ── Horizontal Contact Us buttons row ── */}
+        {/* Contact Us buttons row */}
         <div style={{
           ...fade(0.45),
           display: 'grid',
@@ -194,8 +227,8 @@ export default function MembershipPlans() {
           gap: 20,
           marginTop: 0,
         }} className="plans-grid">
-          {plans.map((plan, i) => (
-            <ContactButton key={plan.name + '-btn'} plan={plan} index={i} />
+          {plans.map((plan) => (
+            <ContactButton key={(plan._id || plan.name) + '-btn'} plan={plan} />
           ))}
         </div>
 
@@ -214,7 +247,7 @@ export default function MembershipPlans() {
                 padding: '8px 16px',
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 2,
+                clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
               }}>
                 <Check size={12} color="var(--accent-orange)" />
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
@@ -224,20 +257,19 @@ export default function MembershipPlans() {
             ))}
           </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .plans-container { padding: 0 20px !important; }
-          .plans-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+        <style>{`
+          @media (max-width: 1024px) {
+            .plans-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </div>
     </section>
   )
 }
 
-/* ── Contact Us button row — one per plan, aligned horizontally ── */
-function ContactButton({ plan, index }: { plan: MembershipPlan; index: number }) {
+/* Contact Us button — one per plan */
+function ContactButton({ plan }: { plan: MembershipPlan }) {
   const [hovered, setHovered] = useState(false)
   const isFeatured = plan.featured
 
@@ -340,6 +372,7 @@ function PlanCard({ plan, fadeStyle }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Featured top accent bar */}
       {plan.featured && (
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 3,
@@ -347,6 +380,7 @@ function PlanCard({ plan, fadeStyle }: {
         }} />
       )}
 
+      {/* Popular ribbon */}
       {plan.featured && (
         <div style={{
           position: 'absolute', top: 16, right: -32,
@@ -359,15 +393,16 @@ function PlanCard({ plan, fadeStyle }: {
         </div>
       )}
 
+      {/* Tag badge */}
       <div style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '6px 14px', marginBottom: 24,
         background: plan.featured
           ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.04)',
         border: `1px solid ${plan.featured ? 'rgba(255,107,0,0.3)' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 2,
         transition: 'all 0.3s ease',
         transform: hovered ? 'scale(1.05)' : 'scale(1)',
+        clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
       }}>
         <Icon
           size={12}
@@ -382,6 +417,7 @@ function PlanCard({ plan, fadeStyle }: {
         </span>
       </div>
 
+      {/* Plan name */}
       <div style={{
         fontFamily: 'Bebas Neue',
         fontSize: 'clamp(26px, 2.5vw, 32px)',
@@ -390,6 +426,7 @@ function PlanCard({ plan, fadeStyle }: {
         {plan.name}
       </div>
 
+      {/* Price section */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{
@@ -409,23 +446,25 @@ function PlanCard({ plan, fadeStyle }: {
         }}>
           Per {plan.period}
         </div>
-        {'savings' in plan && plan.savings ? (
+        {plan.savings && plan.savings > 0 && (
           <div style={{
             fontSize: 12, color: '#22c55e', marginTop: 8,
             fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <span style={{
               background: 'rgba(34,197,94,0.15)',
-              padding: '3px 8px', borderRadius: 2,
+              padding: '3px 8px',
               fontSize: 10, fontWeight: 700,
+              clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
             }}>
               SAVE
             </span>
             {'₨' + plan.savings.toLocaleString() + ' vs monthly'}
           </div>
-        ) : null}
+        )}
       </div>
 
+      {/* Divider */}
       <div style={{
         height: 1,
         background: plan.featured
@@ -434,6 +473,7 @@ function PlanCard({ plan, fadeStyle }: {
         marginBottom: 24,
       }} />
 
+      {/* Features list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {plan.features.map((f, fi) => (
           <FeatureItem
@@ -459,12 +499,13 @@ function FeatureItem({ feature, featured, hovered, index }: {
       transition: `transform 0.35s cubic-bezier(0.16,1,0.3,1) ${index * 0.02}s`,
     }}>
       <div style={{
-        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+        width: 20, height: 20, flexShrink: 0,
         background: featured ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.05)',
         border: `1px solid ${featured ? 'rgba(255,107,0,0.3)' : 'rgba(255,255,255,0.1)'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         marginTop: 1, transition: 'all 0.3s ease',
         transform: hovered ? 'scale(1.1)' : 'scale(1)',
+        clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
       }}>
         <Check
           size={11}
@@ -480,22 +521,4 @@ function FeatureItem({ feature, featured, hovered, index }: {
       </span>
     </div>
   )
-}
-
-function normalizePlan(plan: PlanApiItem, index: number): MembershipPlan | null {
-  if (!plan.name || typeof plan.price !== 'number') return null
-  const icons = [Star, Zap, Crown]
-  return {
-    _id: plan._id,
-    icon: plan.featured ? Zap : icons[index % icons.length],
-    name: plan.name,
-    price: plan.price,
-    period: plan.period || 'month',
-    tag: plan.tag || (plan.featured ? 'Best Value' : 'Membership'),
-    featured: Boolean(plan.featured),
-    features: Array.isArray(plan.features) && plan.features.length > 0
-      ? plan.features.filter(Boolean)
-      : ['Full gym access'],
-    cta: 'Contact Us',
-  }
 }

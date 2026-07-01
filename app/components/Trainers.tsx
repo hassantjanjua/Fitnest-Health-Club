@@ -60,7 +60,7 @@ const fallbackTrainers: TrainerProfile[] = [
     speciality: 'Powerlifting & Hypertrophy',
     cert: 'NASM-CPT, CSCS',
     initials: 'AR',
-    color: '#e05e00',
+    color: '#ff6b00',
     bio: 'With over a decade of competitive powerlifting experience, Ahmed has helped hundreds of clients break through plateaus and achieve elite-level strength. His programming combines periodized hypertrophy blocks with evidence-based powerlifting techniques.',
     achievements: ['2x National Powerlifting Champion', '800+ lbs Deadlift Specialist', '1,000+ Transformations'],
     approach: 'Progressive overload with meticulous form coaching. Every rep has a purpose.',
@@ -74,7 +74,7 @@ const fallbackTrainers: TrainerProfile[] = [
     speciality: 'HIIT, Functional Fitness',
     cert: 'ACE Certified, CrossFit L2',
     initials: 'SM',
-    color: '#cc4400',
+    color: '#e05e00',
     bio: 'Sara turned her passion for high-intensity training into a mission to make fitness accessible and fun. Her HIIT classes are legendary at Fitnest for their energy, results, and camaraderie.',
     achievements: ['CrossFit Open Regional Qualifier', 'ACE Certified Personal Trainer', '300+ HIIT Classes Led'],
     approach: 'High-energy intervals with smart scaling. Everyone works at their limit — safely.',
@@ -111,6 +111,31 @@ const fallbackTrainers: TrainerProfile[] = [
   },
 ]
 
+function normalizeTrainer(trainer: TrainerApiItem): TrainerProfile | null {
+  if (!trainer.name || !trainer.role) return null
+
+  const firstName = trainer.name.split(' ')[0] || 'This trainer'
+  const speciality = trainer.speciality || 'Personal training'
+  const cert = trainer.certifications || 'Certified trainer'
+  const exp = trainer.experience || 'Experienced'
+
+  return {
+    _id: trainer._id,
+    name: trainer.name,
+    role: trainer.role,
+    exp,
+    speciality,
+    cert,
+    initials: (trainer.initials || trainer.name.split(' ').map(part => part[0]).join('')).slice(0, 2).toUpperCase(),
+    color: trainer.color || '#FF6B00',
+    bio: `${trainer.name} specializes in ${speciality.toLowerCase()} and brings ${exp.toLowerCase()} of coaching experience to Fitnest.`,
+    achievements: [cert, speciality, `${exp} experience`],
+    approach: `Personalized coaching focused on form, consistency, and measurable progress.`,
+    funFact: `${firstName} is ready to help members train with confidence.`,
+    social: trainer.instagram || '@fitnestlahore',
+  }
+}
+
 export default function Trainers() {
   const [visible, setVisible] = useState(false)
   const [trainers, setTrainers] = useState<TrainerProfile[]>(fallbackTrainers)
@@ -128,6 +153,7 @@ export default function Trainers() {
     return () => observer.disconnect()
   }, [])
 
+  // Fetch trainers from database
   useEffect(() => {
     let alive = true
 
@@ -163,7 +189,7 @@ export default function Trainers() {
   }, [selectedTrainer])
 
   const handleApplyNow = () => {
-    const el = document.getElementById('pricing')
+    const el = document.getElementById('contact')
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -213,7 +239,7 @@ export default function Trainers() {
           }}
         />
 
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="trainers-container">
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }} className="hero-container">
           {/* Header */}
           <div
             style={{
@@ -223,7 +249,7 @@ export default function Trainers() {
               alignItems: 'end',
               marginBottom: 'clamp(40px, 6vw, 72px)',
             }}
-            className="trainers-header"
+            className="hero-bottom-grid"
           >
             <div>
               <div style={{ ...fade(0.1), display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -286,8 +312,8 @@ export default function Trainers() {
                       textTransform: 'uppercase',
                       border: '1px solid rgba(255,107,0,0.3)',
                       color: 'var(--accent-orange)',
-                      borderRadius: 2,
                       background: 'rgba(255,107,0,0.06)',
+                      clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
                     }}
                   >
                     {tag}
@@ -318,21 +344,19 @@ export default function Trainers() {
             <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>
               Want to join our elite team of trainers?
             </p>
-            <button
-              className="btn-primary"
-              onClick={handleApplyNow}
-              style={{
-                padding: '16px 44px',
-                fontSize: 12,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                cursor: 'pointer',
-              }}
-            >
+            <CTAButton onClick={handleApplyNow}>
               Apply Now <ArrowUpRight size={14} />
-            </button>
+            </CTAButton>
           </div>
+
+          <style>{`
+            @media (max-width: 1024px) {
+              .trainers-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            }
+            @media (max-width: 640px) {
+              .trainers-grid { grid-template-columns: 1fr !important; }
+            }
+          `}</style>
         </div>
       </section>
 
@@ -344,6 +368,37 @@ export default function Trainers() {
         />
       )}
     </>
+  )
+}
+
+function CTAButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '16px 44px',
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        background: hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
+        color: '#fff',
+        border: 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 12px 40px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -372,9 +427,11 @@ function TrainerCard({
         position: 'relative',
         transform: hovered ? 'translateY(-8px)' : 'translateY(0)',
         boxShadow: hovered ? '0 20px 40px rgba(255,107,0,0.1)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={onViewProfile}
     >
       {/* Top accent line */}
       <div
@@ -441,7 +498,6 @@ function TrainerCard({
             background: 'rgba(8,8,8,0.95)',
             border: '1px solid rgba(255,107,0,0.25)',
             padding: '6px 12px',
-            borderRadius: 2,
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -541,7 +597,10 @@ function ProfileButton({ hovered, color, onClick }: { hovered: boolean; color: s
 
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
       onMouseEnter={() => setBtnHovered(true)}
       onMouseLeave={() => setBtnHovered(false)}
       style={{
@@ -576,8 +635,6 @@ function TrainerProfileModal({
   trainer: TrainerProfile
   onClose: () => void
 }) {
-  const modalRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -591,7 +648,7 @@ function TrainerProfileModal({
   }
 
   const handleBookSession = () => {
-    const el = document.getElementById('pricing')
+    const el = document.getElementById('contact')
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
       onClose()
@@ -608,14 +665,14 @@ function TrainerProfileModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(0,0,0,0.85)',
+        background: 'rgba(0,0,0,0.9)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         padding: 24,
+        animation: 'fadeIn 0.3s ease',
       }}
     >
       <div
-        ref={modalRef}
         style={{
           position: 'relative',
           width: '100%',
@@ -626,6 +683,7 @@ function TrainerProfileModal({
           border: '1px solid rgba(255,107,0,0.15)',
           clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
           boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 60px rgba(255,107,0,0.05)',
+          animation: 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         {/* Top accent */}
@@ -648,8 +706,8 @@ function TrainerProfileModal({
             top: 16,
             right: 16,
             zIndex: 10,
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -657,7 +715,7 @@ function TrainerProfileModal({
             border: '1px solid rgba(255,255,255,0.1)',
             color: 'rgba(255,255,255,0.6)',
             cursor: 'pointer',
-            clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
+            clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
             transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {
@@ -671,7 +729,7 @@ function TrainerProfileModal({
             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
           }}
         >
-          <X size={16} />
+          <X size={18} />
         </button>
 
         {/* Hero Section */}
@@ -754,6 +812,7 @@ function TrainerProfileModal({
                     color: 'rgba(255,255,255,0.5)',
                     fontWeight: 600,
                     letterSpacing: '0.05em',
+                    clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
                   }}
                 >
                   <Award size={11} color="var(--accent-orange)" />
@@ -771,6 +830,7 @@ function TrainerProfileModal({
                     color: 'rgba(255,255,255,0.5)',
                     fontWeight: 600,
                     letterSpacing: '0.05em',
+                    clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
                   }}
                 >
                   <InstagramIcon size={12} />
@@ -817,7 +877,7 @@ function TrainerProfileModal({
               gap: 28,
               marginBottom: 28,
             }}
-            className="modal-details"
+            className="hero-bottom-grid"
           >
             {/* Achievements */}
             <div>
@@ -968,49 +1028,42 @@ function TrainerProfileModal({
           </div>
 
           {/* CTA */}
-          <button
-            onClick={handleBookSession}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: 11,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              cursor: 'pointer',
-            }}
-          >
-            Book a Session with {trainer.name.split(' ')[0]} <ArrowUpRight size={14} />
-          </button>
+          <ModalCTAButton onClick={handleBookSession} trainerName={trainer.name} />
         </div>
       </div>
     </div>
   )
 }
 
-function normalizeTrainer(trainer: TrainerApiItem): TrainerProfile | null {
-  if (!trainer.name || !trainer.role) return null
-
-  const firstName = trainer.name.split(' ')[0] || 'This trainer'
-  const speciality = trainer.speciality || 'Personal training'
-  const cert = trainer.certifications || 'Certified trainer'
-  const exp = trainer.experience || 'Experienced'
-
-  return {
-    _id: trainer._id,
-    name: trainer.name,
-    role: trainer.role,
-    exp,
-    speciality,
-    cert,
-    initials: (trainer.initials || trainer.name.split(' ').map(part => part[0]).join('')).slice(0, 2).toUpperCase(),
-    color: trainer.color || '#FF6B00',
-    bio: `${trainer.name} specializes in ${speciality.toLowerCase()} and brings ${exp.toLowerCase()} of coaching experience to Fitnest.`,
-    achievements: [cert, speciality, `${exp} experience`],
-    approach: `Personalized coaching focused on form, consistency, and measurable progress.`,
-    funFact: `${firstName} is ready to help members train with confidence.`,
-    social: trainer.instagram || '@fitnestlahore',
-  }
+function ModalCTAButton({ onClick, trainerName }: { onClick: () => void; trainerName: string }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%',
+        padding: '16px',
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        background: hovered ? 'var(--accent-orange-hover)' : 'var(--accent-orange)',
+        color: '#fff',
+        border: 'none',
+        transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 10px 30px rgba(255,107,0,0.35)' : 'none',
+        clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+      }}
+    >
+      Book a Session with {trainerName.split(' ')[0]} <ArrowUpRight size={14} />
+    </button>
+  )
 }
